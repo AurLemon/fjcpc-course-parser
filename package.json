@@ -1,0 +1,12 @@
+{
+  "name": "fjcpc-course-schedule",
+  "version": "1.0.0",
+  "description": "An unofficial service that parses the Fujian Chuanzheng Communications College course schedule and provides it as an API into third parties.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "AurLemon",
+  "license": "ISC"
+}
