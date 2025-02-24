@@ -12,10 +12,7 @@ module.exports = async function (fastify, opts) {
     }
   },
   async function (request, reply) {
-    const data = {
-      test: true
-    }
-
-    return successResponse(200, data, "Successfully get userinfo.")
-  })
+    
+    return successResponse(200, data, "Successfully get ")
+  });
 }
