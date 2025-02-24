@@ -13,6 +13,6 @@ module.exports = async function (fastify, opts) {
   },
   async function (request, reply) {
     
-    return successResponse(200, data, "Successfully get ")
+    return successResponse(200, data, 'Successfully get ')
   });
 }

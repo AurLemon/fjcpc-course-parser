@@ -6,7 +6,7 @@ const puppeteer = require("puppeteer");
 let basicAuthValue = null;
 let bearerAuthValue = null;
 
-async function startSimulator() {
+const startSimulator = async () => {
   const browser = await puppeteer.launch({
     headless: true,
     defaultViewport: null,
@@ -43,10 +43,10 @@ async function startSimulator() {
   });
 
   await page.goto(
-    `${config.collegeAppBaseUrl}/czmobile/mytimetableIndexNew?uid=${config.testStudentUcode}`, { waitUntil: "networkidle0" }
+    `${config.collegeAppBaseUrl}/czmobile/mytimetableIndexNew?uid=${config.testStudentRawUcode}`, { waitUntil: "networkidle0" }
   );
 
-  console.log(`✅ 模拟器已加载 ${config.testStudentUcode} 的数据。`);
+  console.log(`✅ 模拟器已加载 ${config.testStudentRawUcode} 的数据。`);
   
   return { basicAuthValue, bearerAuthValue };
 }
