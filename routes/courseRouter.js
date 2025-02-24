@@ -1,9 +1,21 @@
 'use strict'
 
+const responseSchema = require('../utils/schema');
+const { successResponse } = require('../utils/response');
+
 module.exports = async function (fastify, opts) {
-  fastify.get('/course', async function (request, reply) {
-    return {
-        test: true
+  fastify.get('/course', {
+    schema: {
+      response: {
+        200: responseSchema
+      }
     }
+  },
+  async function (request, reply) {
+    const data = {
+      test: true
+    }
+
+    return successResponse(200, data, "Successfully get userinfo.")
   })
 }
