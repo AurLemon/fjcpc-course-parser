@@ -15,10 +15,11 @@ const getAllSemester = async (userToken) => {
   const semesterUrl = `${config.collegeAppBaseUrl}/gateway/xgwork/appCourseTable/getXn`;
 
   try {
-    const response = await axios.get(semesterUrl, null, {
+    const response = await axios.get(semesterUrl, {
       headers: {
         'Authorization': `Bearer ${userToken}`
-      }
+      },
+      params: null
     })
   } catch (error) {
 
