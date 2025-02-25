@@ -12,7 +12,9 @@ module.exports = async function (fastify, opts) {
     }
   },
   async function (request, reply) {
-    
-    return successResponse(200, data, 'Successfully get ')
+    const data = {
+      ucode: process.env.TEST_STUDENT_UCODE
+    }
+    return successResponse(200, data, 'Successfully get course info.')
   });
 }

@@ -8,17 +8,28 @@ const authService = require('./authService');
 
 /**
  * 获取系统内有记录的学年数据（学期起始日和结束日、周数）
+ * @param {string} userToken
  * @returns {Promise<Array>}
  */
-const getAllSemester = async () => {
+const getAllSemester = async (userToken) => {
+  const semesterUrl = `${config.collegeAppBaseUrl}/gateway/xgwork/appCourseTable/getXn`;
 
+  try {
+    const response = await axios.get(semesterUrl, null, {
+      headers: {
+        'Authorization': `Bearer ${userToken}`
+      }
+    })
+  } catch (error) {
+
+  }
 }
 
 /**
  * 获取指定学期所有周的起始日
  * @param {string} semester 
  */
-const getWeekStartsBySemester = async (semester) => {
+const getWeekStartsBySemester = async (userToken, semester) => {
 
 }
 
@@ -27,7 +38,7 @@ const getWeekStartsBySemester = async (semester) => {
  * @param {string} semester 
  * @param {string} week 
  */
-const getWeekCourse = async (semester, week) => {
+const getWeekCourse = async (userToken, semester, week) => {
 
 }
 

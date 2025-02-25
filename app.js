@@ -1,5 +1,8 @@
 "use strict";
 
+const axios = require('axios');
+delete axios.defaults.headers.common['User-Agent'];
+
 const fs = require("fs");
 const path = require("node:path");
 const AutoLoad = require("@fastify/autoload");

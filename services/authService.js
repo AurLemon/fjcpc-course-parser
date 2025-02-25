@@ -17,10 +17,11 @@ const getBasicAuth = () => {
 
 /**
  * 获取 Basic 验证字符串（模拟浏览器环境，直接模拟学生访问课表以获取现实数据，非必要不用）
+ * @param {string} rawUcode
  * @returns {Promise<string>}
  */
-const getServerBasicAuth = async () => {
-  const { basicAuthValue } = await simulator.startSimulator();
+const getServerBasicAuth = async (rawUcode) => {
+  const { basicAuthValue } = await simulator.startSimulator(rawUcode);
   return basicAuthValue;
 };
 
@@ -33,18 +34,19 @@ const getUserInfo = async (rawUcode) => {
   const requestUrl = config.collegeAppBaseUrl + '/gateway/auth/oauth/token';
   const ucode = `HUA_TENG-${rawUcode}`;
 
-  const requestBody = {
+  const requestParams = {
     ucode,
     state: 1,
-    grant_type: ucode,
+    grant_type: 'ucode',
     scope: 'server',
   };
-
+  
   try {
-    const response = await axios.post(requestUrl, requestBody, {
+    const response = await axios.get(requestUrl, {
       headers: {
-        Authorization: getBasicAuth(),
+        Authorization: getBasicAuth()
       },
+      params: requestParams
     });
 
     const accessToken = response.data.access_token;
@@ -52,19 +54,21 @@ const getUserInfo = async (rawUcode) => {
 
     const studentId = response.data.user_info.username;
     const studentPhone = response.data.user_info.phone;
-    const studentRealname = response.data.user_info.nickname;
+    const studentRealname = response.data.user_info.nickName;
 
     return { accessToken, refreshToken, studentId, studentPhone, studentRealname };
   } catch (error) {
+    console.log(error);
     if (error.response) {
       // 401 Unauthorized 尝试一次重试
-      if (error.response.status === 401) {
+      if (error.response.status === 2) {
         try {
           // 用浏览器环境模拟器尝试获取 Authorization
-          const response = await axios.post(requestUrl, requestBody, {
+          const response = await axios.post(requestUrl, {
             headers: {
-              Authorization: getServerBasicAuth(),
+              Authorization: await getServerBasicAuth()
             },
+            params: requestParams
           });
 
           const accessToken = response.data.access_token;
@@ -81,7 +85,7 @@ const getUserInfo = async (rawUcode) => {
         }
       }
       
-      throw new Error(`Error while fetching user token on retry: ${retryError.response.status}. Message: ${retryError.response.data.message}.`);
+      throw new Error(`Error while fetching user token on retry: ${error.response.status}. Message: ${error.response.data.message}.`);
     } else if (error.request) {
       throw new Error('Error while fetching user token: ' + error.request);
     } else {

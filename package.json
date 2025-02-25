@@ -24,5 +24,8 @@
     "fastify-cli": "^7.3.0",
     "fastify-plugin": "^5.0.0",
     "puppeteer": "^24.2.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7"
   }
 }
