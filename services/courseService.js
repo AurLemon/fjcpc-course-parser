@@ -54,7 +54,7 @@ const getSemester = async (userToken, schoolYear, semester) => {
   try {
     const response = await axios.get(semesterUrl, {
       headers: {
-        'Authorization': `Bearer ${userToken}`
+        Authorization: `Bearer ${userToken}`
       },
       params: requestParams
     });
@@ -90,7 +90,7 @@ const getWeekCourse = async (userToken, studentId, startTime) => {
   try {
     const response = await axios.get(semesterUrl, {
       headers: {
-        'Authorization': `Bearer ${userToken}`
+        Authorization: `Bearer ${userToken}`
       },
       params: requestParams
     });
