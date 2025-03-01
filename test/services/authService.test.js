@@ -1,9 +1,10 @@
 require('dotenv').config();
+
 const authService = require('../../services/authService');
 
-(async function () {
-  const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
-  
+const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
+
+(async () => {
   try {
     const userInfo = await authService.getUserInfo(TEST_UCODE);
     console.log("userInfo: ", userInfo);

@@ -1,7 +1,8 @@
 require('dotenv').config();
+
 const simulator = require('../../utils/simulator');
 
-(async function () {
+(async () => {
   try {
     const { basicAuthValue, bearerAuthValue } = await simulator.startSimulator();
     console.log({ basicAuthValue, bearerAuthValue });

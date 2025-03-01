@@ -3,6 +3,7 @@
 const axios = require('axios');
 
 const config = require('../utils/config');
+const api = require('../utils/api');
 const simulator = require('../utils/simulator');
 
 /**
@@ -58,39 +59,23 @@ const getUserInfo = async (rawUcode) => {
 
     return { accessToken, refreshToken, studentId, studentPhone, studentRealname };
   } catch (error) {
-    console.log(error);
-    if (error.response) {
-      // 401 Unauthorized 尝试一次重试
-      if (error.response.status === 2) {
-        try {
-          // 用浏览器环境模拟器尝试获取 Authorization
-          const response = await axios.post(requestUrl, {
-            headers: {
-              Authorization: await getServerBasicAuth()
-            },
-            params: requestParams
-          });
+    return await api.authRequestRetry(error, async () => {      
+      const response = await axios.get(requestUrl, {
+        headers: {
+          Authorization: await getServerBasicAuth()
+        },
+        params: requestParams
+      });
 
-          const accessToken = response.data.access_token;
-          const refreshToken = response.data.refresh_token;
+      const accessToken = response.data.access_token;
+      const refreshToken = response.data.refresh_token;
 
-          const studentId = response.data.user_info.username;
-          const studentPhone = response.data.user_info.phone;
-          const studentRealname = response.data.user_info.nickname;
+      const studentId = response.data.user_info.username;
+      const studentPhone = response.data.user_info.phone;
+      const studentRealname = response.data.user_info.nickName;
 
-          return { accessToken, refreshToken, studentId, studentPhone, studentRealname };
-        } catch (retryError) {
-          // 还不行就算了
-          throw new Error(`Error while fetching user token on retry: ${retryError.response.status}. Message: ${retryError.response.data.message}.`);
-        }
-      }
-      
-      throw new Error(`Error while fetching user token on retry: ${error.response.status}. Message: ${error.response.data.message}.`);
-    } else if (error.request) {
-      throw new Error('Error while fetching user token: ' + error.request);
-    } else {
-      throw new Error('Error while fetching user token: ' + error.message);
-    }
+      return { accessToken, refreshToken, studentId, studentPhone, studentRealname };
+    });
   }
 };
 
