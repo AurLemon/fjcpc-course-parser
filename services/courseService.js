@@ -84,7 +84,7 @@ const getWeekCourse = async (userToken, studentId, startTime) => {
   const semesterUrl = `${config.collegeAppBaseUrl}/gateway/xgwork/appCourseTable/getListByNoWeek2`;
   const requestParams = {
     no: studentId,
-    week: startTime
+    startDate: startTime
   };
 
   try {
@@ -97,8 +97,12 @@ const getWeekCourse = async (userToken, studentId, startTime) => {
 
     const weekCourseData = response.data.data;
 
-    const formattedData = weekCourseData.map(item => ({
-      
+    const formattedData = weekCourseData.map((item, index) => ({
+      weekday: index + 1,
+      course: item.map((course, index) => ({
+          course_number: index + 1,
+          course_info: parseCourseString(course)
+      }))
     }));
 
     return formattedData;
@@ -110,10 +114,25 @@ const getWeekCourse = async (userToken, studentId, startTime) => {
 /**
  * 解析课程信息（把课程信息字符串解析成可读的对象）
  * @param {string} string 课程信息字符串
- * @returns {Promise<Object>} 解析后的课程信息
+ * @returns {Object} 解析后的课程信息
  */
-const parseCourseString = async (string) => {
+const parseCourseString = (string) => {
+  if (!string) return null;
 
+  const splitData = string.split('|');
+  const formattedData = {
+    name: splitData[0],
+    classroom: splitData[1],
+    class: splitData[2],
+    teacher: splitData[3].split(';'),
+    course_number: Number(splitData[4]),
+    weekday: Number(splitData[5]),
+    color: splitData[6],
+    continuous_course: Number(splitData[7]),
+    code: splitData[8]
+  };
+
+  return formattedData;
 };
 
 module.exports = { getSchoolYear, getSemester, getWeekCourse };
