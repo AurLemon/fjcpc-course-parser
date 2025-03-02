@@ -15,7 +15,7 @@ const axiosIPv4 = () => axios.create({
 
 /**
  * 认证请求重试（懒得写一堆）
- * @param {AxiosError} error AxiosError 的错误对象
+ * @param {import('axios').AxiosError} error AxiosError 的错误对象
  */
 const requestRetry = (error) => {
   console.error("Error while fetching info:", error);
@@ -32,7 +32,7 @@ const requestRetry = (error) => {
 
 /**
  * 401 错误后认证请求重试（懒得写一堆）
- * @param {AxiosError} error AxiosError 的错误对象
+ * @param {import('axios').AxiosError} error AxiosError 的错误对象
  * @param {Function} unauthRetry 验证错误后重试的回调函数
  * @returns {Promise<any>}
  */
