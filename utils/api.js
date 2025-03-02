@@ -1,4 +1,5 @@
 // utils/api.js
+'use strict';
 
 const axios = require('axios');
 const http = require('http');

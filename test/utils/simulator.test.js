@@ -1,3 +1,6 @@
+// test/utils/simulator.test.js
+'use strict';
+
 require('dotenv').config();
 
 const simulator = require('../../utils/simulator');

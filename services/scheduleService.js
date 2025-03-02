@@ -1,6 +1,5 @@
 // services/scheduleService.js
-
-const axios = require('axios');
+'use strict';
 
 const config = require('../utils/config');
 const api = require('../utils/api');

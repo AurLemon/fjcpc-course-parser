@@ -1,7 +1,9 @@
+// test/services/authService.test.js
+'use strict';
+
 require('dotenv').config();
 
 const authService = require('../../services/authService');
-
 const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
 
 (async () => {

@@ -1,3 +1,6 @@
+// test/services/scheduleService.test.js
+'use strict';
+
 require('dotenv').config();
 
 const scheduleService = require('../../services/scheduleService');

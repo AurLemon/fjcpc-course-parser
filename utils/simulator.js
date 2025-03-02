@@ -1,4 +1,5 @@
 // utils/simulator.js
+'use strict';
 
 const config = require("../utils/config");
 const puppeteer = require("puppeteer");

@@ -1,6 +1,5 @@
-/**
- * API 返回体
- */
+// utils/response.js
+'use strict';
 
 const response = (code, status, data, message) => {
     return {

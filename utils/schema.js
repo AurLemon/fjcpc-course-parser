@@ -1,6 +1,5 @@
-/**
- * 定义返回体的 Schema
- */
+// utils/schema.js
+'use strict';
 
 const responseSchema = {
     type: 'object',

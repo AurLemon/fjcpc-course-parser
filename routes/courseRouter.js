@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 const responseSchema = require('../utils/schema');
 const { successResponse } = require('../utils/response');
