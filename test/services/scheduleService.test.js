@@ -15,7 +15,7 @@ const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
     const schoolYear = await scheduleService.getSchoolYear(userInfo.accessToken);
     console.log("School year:", schoolYear);
 
-    const currentSemester = schoolYear.find(s => s.is_current_semester);
+    const currentSemester = schoolYear.findLast(s => s.is_current_semester);
     if (!currentSemester) return;
     const semester = await scheduleService.getSemester(userInfo.accessToken, currentSemester.school_year, currentSemester.semester);
     console.log("Semester:", semester);
