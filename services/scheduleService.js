@@ -122,7 +122,7 @@ const parseCourseString = (string) => {
   const splitData = string.split('|');
   const formattedData = {
     name: splitData[0],
-    classroom: splitData[1],
+    classroom: splitData[1] === '无' ? null : splitData[1],
     class: splitData[2],
     teacher: splitData[3].split(';'),
     course_number: Number(splitData[4]),
