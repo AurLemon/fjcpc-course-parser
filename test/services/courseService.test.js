@@ -7,7 +7,7 @@ const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
 
 (async () => {
   const userInfo = await authService.getUserInfo(TEST_UCODE);
-  
+
   try {
     const schoolYear = await courseService.getSchoolYear(userInfo.accessToken);
     console.log("School year:", schoolYear);
@@ -16,7 +16,7 @@ const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
     console.log("Semester:", semester);
 
     const weekCourse = await courseService.getWeekCourse(userInfo.accessToken, userInfo.studentId, '2025-02-24');
-    console.log("Week course:", JSON.stringify(weekCourse, null, 2));    
+    console.log("Week course:", JSON.stringify(weekCourse, null, 2));
   } catch (error) {
     console.error('Error occurred:', error);
   }

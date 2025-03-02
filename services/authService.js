@@ -6,6 +6,8 @@ const config = require('../utils/config');
 const api = require('../utils/api');
 const simulator = require('../utils/simulator');
 
+const axiosIPv4 = api.axiosIPv4();
+
 /**
  * 获取 Basic 验证字符串（根据校内服务器数据推测，存在不确定性）
  * @returns {string}
@@ -28,7 +30,7 @@ const getServerBasicAuth = async (rawUcode) => {
 
 /**
  * 传入 UCode 以获得用户信息
- * @param {string} rawUcode
+ * @param {string} rawUcode 不带前缀的用户标识码
  * @returns {Promise<{accessToken: string, refreshToken: string, studentId: string, studentPhone: string, studentRealname: string}>}
  */
 const getUserInfo = async (rawUcode) => {
@@ -43,7 +45,7 @@ const getUserInfo = async (rawUcode) => {
   };
   
   try {
-    const response = await axios.get(requestUrl, {
+    const response = await axiosIPv4.get(requestUrl, {
       headers: {
         Authorization: getBasicAuth()
       },
@@ -60,7 +62,7 @@ const getUserInfo = async (rawUcode) => {
     return { accessToken, refreshToken, studentId, studentPhone, studentRealname };
   } catch (error) {
     return await api.authRequestRetry(error, async () => {      
-      const response = await axios.get(requestUrl, {
+      const response = await axiosIPv4.get(requestUrl, {
         headers: {
           Authorization: await getServerBasicAuth()
         },

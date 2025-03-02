@@ -1,4 +1,17 @@
-// utils/utils.js
+// utils/api.js
+
+const axios = require('axios');
+const http = require('http');
+const https = require('https');
+
+/**
+ * 强制 IPv4 的 Axios 请求（为了解决船政那个神必 DNS 服务器加了 AAAA 却没法解析的问题）
+ * @returns {import('axios').AxiosInstance}
+ */
+const axiosIPv4 = () => axios.create({
+  httpAgent: new http.Agent({ family: 4 }),
+  httpsAgent: new https.Agent({ family: 4 }),
+});
 
 /**
  * 认证请求重试（懒得写一堆）
@@ -44,4 +57,4 @@ const authRequestRetry = async (error, unauthRetry) => {
   }
 };
 
-module.exports = { requestRetry, authRequestRetry };
+module.exports = { axiosIPv4, requestRetry, authRequestRetry };

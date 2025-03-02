@@ -1,10 +1,11 @@
 // services/courseService.js
 
-const dayjs = require('dayjs');
 const axios = require('axios');
 
 const config = require('../utils/config');
 const api = require('../utils/api');
+
+const axiosIPv4 = api.axiosIPv4();
 
 /**
  * 获取系统内有记录的学年数据（学期起始日和结束日、周数）
@@ -15,7 +16,7 @@ const getSchoolYear = async (userToken) => {
   const schoolYearUrl = `${config.collegeAppBaseUrl}/gateway/xgwork/appCourseTable/getXn`;
 
   try {
-    const response = await axios.get(schoolYearUrl, {
+    const response = await axiosIPv4.get(schoolYearUrl, {
       headers: {
         Authorization: `Bearer ${userToken}`
       }
@@ -52,7 +53,7 @@ const getSemester = async (userToken, schoolYear, semester) => {
   };
 
   try {
-    const response = await axios.get(semesterUrl, {
+    const response = await axiosIPv4.get(semesterUrl, {
       headers: {
         Authorization: `Bearer ${userToken}`
       },
@@ -88,7 +89,7 @@ const getWeekCourse = async (userToken, studentId, startTime) => {
   };
 
   try {
-    const response = await axios.get(semesterUrl, {
+    const response = await axiosIPv4.get(semesterUrl, {
       headers: {
         Authorization: `Bearer ${userToken}`
       },
