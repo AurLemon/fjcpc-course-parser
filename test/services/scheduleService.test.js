@@ -15,10 +15,12 @@ const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
     const schoolYear = await scheduleService.getSchoolYear(userInfo.accessToken);
     console.log("School year:", schoolYear);
 
-    const semester = await scheduleService.getSemester(userInfo.accessToken, '2024-2025', '2');
+    const currentSemester = schoolYear.find(s => s.is_current_semester);
+    if (!currentSemester) return;
+    const semester = await scheduleService.getSemester(userInfo.accessToken, currentSemester.school_year, currentSemester.semester);
     console.log("Semester:", semester);
 
-    const weekCourse = await scheduleService.getWeekCourse(userInfo.accessToken, userInfo.studentId, '2025-02-24');
+    const weekCourse = await scheduleService.getWeekCourse(userInfo.accessToken, userInfo.studentId, currentSemester.start_time);
     console.log("Week course:", JSON.stringify(weekCourse, null, 2));
   } catch (error) {
     console.error('Error occurred:', error);
