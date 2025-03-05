@@ -26,7 +26,7 @@ const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
     const allCourses = await courseService.getAllCourses(userInfo.accessToken, userInfo.studentId, semester);
     const sortedCourses = JSON.stringify(Object.fromEntries([...allCourses.entries()].sort(([a], [b]) => a - b)), null, 2);
     console.log("All courses:", sortedCourses);
-    fs.writeFileSync(filePath, sortedCourses, 'utf8');    
+    fs.writeFileSync(filePath, sortedCourses, 'utf8');
   } catch (error) {
     console.error('Error occurred:', error);
   }
