@@ -21,10 +21,12 @@ const TEST_UCODE = process.env.TEST_STUDENT_UCODE;
     if (!currentSemester) return;
     const semester = await scheduleService.getSemester(userInfo.accessToken, currentSemester.school_year, currentSemester.semester);
     
+    const filePath = path.join(__dirname, '../data/all_courses.json');
+    if (!fs.existsSync(path.dirname(filePath))) fs.mkdirSync(path.dirname(filePath), { recursive: true });
     const allCourses = await courseService.getAllCourses(userInfo.accessToken, userInfo.studentId, semester);
-    console.log("All courses:", JSON.stringify(Object.fromEntries([...allCourses.entries()].sort(([a], [b]) => a - b)), null, 2));
-
-    fs.writeFileSync(path.join(__dirname, '../data/all_courses.json'), JSON.stringify(Object.fromEntries([...allCourses.entries()].sort(([a, b]) => a - b)), null, 2), 'utf8');
+    const sortedCourses = JSON.stringify(Object.fromEntries([...allCourses.entries()].sort(([a], [b]) => a - b)), null, 2);
+    console.log("All courses:", sortedCourses);
+    fs.writeFileSync(filePath, sortedCourses, 'utf8');    
   } catch (error) {
     console.error('Error occurred:', error);
   }
