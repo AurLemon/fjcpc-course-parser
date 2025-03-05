@@ -88,3 +88,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# test files
+/test/data
