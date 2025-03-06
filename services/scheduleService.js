@@ -4,6 +4,7 @@
 const config = require('../utils/config');
 const api = require('../utils/api');
 const log = require('../utils/log');
+const schedule = require('../utils/schedule');
 
 const axiosIPv4 = api.axiosIPv4();
 
@@ -139,4 +140,10 @@ const parseCourseString = (string) => {
   return formattedData;
 };
 
-module.exports = { getSchoolYear, getSemester, getWeekCourse };
+/**
+ * 学校日程信息
+ * @returns {Object}
+ */
+const getSchoolSchedule = () => schedule;
+
+module.exports = { getSchoolYear, getSemester, getWeekCourse, getSchoolSchedule };
