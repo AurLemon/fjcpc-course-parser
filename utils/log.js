@@ -1,3 +1,4 @@
+// utils/log.js
 'use strict';
 
 const fs = require('fs');
@@ -27,7 +28,9 @@ const getLogFilePath = () => path.join(LOG_DIR, `${new Date().toISOString().spli
  * 
  * @returns {string} 当前时间的ISO格式字符串，格式为YYYY-MM-DD HH:MM:SS.sss
  */
-const getTimeStamp = () => new Date().toISOString().replace('T', ' ').replace('Z', '');
+const getTimeStamp = () => {
+    return new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+};
 
 /**
  * 将日志信息写入到日志文件中
@@ -36,6 +39,11 @@ const getTimeStamp = () => new Date().toISOString().replace('T', ' ').replace('Z
  */
 const logToFile = (level, message) => {
     const logMessage = `[${getTimeStamp()}] [${level.toUpperCase()}] ${message}\n`;
+
+    if (level === 'error') {
+        console.error(logMessage);
+    }
+
     fs.appendFile(getLogFilePath(), logMessage, (err) => {
         if (err) console.error('日志写入失败:', err);
     });

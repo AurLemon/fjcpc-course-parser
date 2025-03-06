@@ -3,6 +3,7 @@
 
 const config = require('../utils/config');
 const api = require('../utils/api');
+const log = require('../utils/log');
 
 const axiosIPv4 = api.axiosIPv4();
 
@@ -33,6 +34,7 @@ const getSchoolYear = async (userToken) => {
 
     return formattedData;
   } catch (error) {
+    log.error(`Student ${userToken} failed to request school year. Error: ${error}`);
     return api.requestRetry(error);
   }
 };
@@ -69,6 +71,7 @@ const getSemester = async (userToken, schoolYear, semester) => {
 
     return formattedData;
   } catch (error) {
+    log.error(`Student ${userToken} failed to request semester info. Error: ${error}`);
     return api.requestRetry(error);
   }
 };
@@ -107,6 +110,7 @@ const getWeekCourse = async (userToken, studentId, startTime) => {
 
     return formattedData;
   } catch (error) {
+    log.error(`Student ${userToken} failed to request week course. Error: ${error}`);
     return api.requestRetry(error);
   }
 };
