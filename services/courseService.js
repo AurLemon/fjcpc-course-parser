@@ -40,8 +40,4 @@ const getAllCourses = async (userToken, studentId, semester) => {
   return coursesMap;
 };
 
-const getSchoolSchedule = () => {
-
-};
-
 module.exports = { getAllCourses };

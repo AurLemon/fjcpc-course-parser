@@ -12,6 +12,6 @@ const responseSchema = {
         },
         message: { type: 'string' }
     }
-}
+};
 
-module.exports = { responseSchema }
+module.exports = { responseSchema };
