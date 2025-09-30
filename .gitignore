@@ -90,4 +90,4 @@ dist-ssr
 *.sw?
 
 # test files
-/test/data
+/backend/test/data
