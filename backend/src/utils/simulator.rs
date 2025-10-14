@@ -57,8 +57,8 @@ pub async fn start_simulator(raw_ucode: Option<String>, config: &AppConfig) -> R
 
     match tab.navigate_to(&url) {
         Ok(_) => {
-            // 等待页面加载
-            thread::sleep(Duration::from_secs(3));
+            // 等待页面加载与后续 API 请求发出
+            thread::sleep(Duration::from_secs(6));
             info!("Success: 模拟器已加载 {} 的数据。", request_ucode);
         }
         Err(e) => {
@@ -66,15 +66,68 @@ pub async fn start_simulator(raw_ucode: Option<String>, config: &AppConfig) -> R
         }
     }
 
-    // TODO: 实现完整的网络请求监听和 Authorization 头捕获
-    // headless_chrome 的 CDP 事件监听 API 需要更深入的研究
-    // 当前返回 None，依赖静态 Basic Auth
+    // 读取本地存储/会话存储中的 token 或 Authorization 片段
+    let basic_auth_value = tab
+        .evaluate(r#"(() => {
+          function findByPrefix(store, prefix){
+            try{
+              if (!store) return null;
+              for (let i=0;i<store.length;i++){
+                const k = store.key(i);
+                const v = store.getItem(k);
+                if (!v) continue;
+                if (typeof v === 'string'){
+                  if (v.startsWith(prefix)) return v;
+                  try { const obj = JSON.parse(v);
+                    for (const val of Object.values(obj)){
+                      if (typeof val === 'string' && val.startsWith(prefix)) return val;
+                    }
+                  } catch(e){}
+                }
+              }
+            }catch(e){}
+            return null;
+          }
+          return findByPrefix(window.localStorage, 'Basic ') ||
+                 findByPrefix(window.sessionStorage, 'Basic ') || null;
+        })()"#, false)
+        .ok()
+        .and_then(|res| res.value)
+        .and_then(|v| v.as_str().map(|s| s.to_string()));
 
-    warn!("Browser simulator completed (auth capture not fully implemented)");
-    warn!("Falling back to static Basic Auth: cat:cat");
+    let bearer_auth_value = tab
+        .evaluate(r#"(() => {
+          function findByPrefix(store, prefix){
+            try{
+              if (!store) return null;
+              for (let i=0;i<store.length;i++){
+                const k = store.key(i);
+                const v = store.getItem(k);
+                if (!v) continue;
+                if (typeof v === 'string'){
+                  if (v.startsWith(prefix)) return v;
+                  try { const obj = JSON.parse(v);
+                    for (const val of Object.values(obj)){
+                      if (typeof val === 'string' && val.startsWith(prefix)) return val;
+                    }
+                  } catch(e){}
+                }
+              }
+            }catch(e){}
+            return null;
+          }
+          return findByPrefix(window.localStorage, 'Bearer ') ||
+                 findByPrefix(window.sessionStorage, 'Bearer ') || null;
+        })()"#, false)
+        .ok()
+        .and_then(|res| res.value)
+        .and_then(|v| v.as_str().map(|s| s.to_string()));
+
+    // 兜底 Basic
+    let basic_final = basic_auth_value.or_else(|| Some("Basic Y2F0OmNhdA==".to_string()));
 
     Ok(SimulatorResult {
-        basic_auth_value: Some("Basic Y2F0OmNhdA==".to_string()),  // cat:cat
-        bearer_auth_value: None,  // 需要完整实现才能捕获
+        basic_auth_value: basic_final,
+        bearer_auth_value,
     })
 }

@@ -14,16 +14,17 @@ async fn test_schedule_service() {
 
     println!("Testing schedule service with ucode: {}", test_ucode);
 
+    // HTTP client
+    let client = create_http_client().expect("Failed to create HTTP client");
+
     // Get user info first
-    let user_info = match get_user_info(Some(test_ucode.clone()), &config).await {
+    let user_info = match get_user_info(&test_ucode, &client, &config).await {
         Ok(info) => info,
         Err(e) => {
             eprintln!("Failed to get user info: {}", e);
             return;
         }
     };
-
-    let client = create_http_client().expect("Failed to create HTTP client");
 
     // Test get school year
     match get_school_year(&user_info.access_token, &client, &config).await {
@@ -35,10 +36,11 @@ async fn test_schedule_service() {
                 println!("Current semester: {:?}", current_semester);
 
                 // Test get semester
+                let semester_str = current_semester.semester.to_string();
                 match get_semester(
                     &user_info.access_token,
                     &current_semester.school_year,
-                    &current_semester.semester,
+                    &semester_str,
                     &client,
                     &config,
                 ).await {

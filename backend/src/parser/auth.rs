@@ -2,12 +2,13 @@ use anyhow::Result;
 use base64::{engine::general_purpose, Engine as _};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use tracing::error;
 
 use crate::utils::config::AppConfig;
 use crate::utils::simulator;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct UserInfo {
     pub access_token: String,
     pub refresh_token: String,
@@ -48,6 +49,24 @@ pub async fn get_server_basic_auth(raw_ucode: Option<String>, config: &AppConfig
         .ok_or_else(|| anyhow::anyhow!("Failed to get basic auth from simulator"))
 }
 
+/// 获取 Bearer 验证字符串（优先通过浏览器模拟器捕获；失败则回退为调用 token 接口获取）
+pub async fn get_server_bearer_auth(
+    raw_ucode: &str,
+    client: &Client,
+    config: &AppConfig,
+) -> Result<String> {
+    // 先尝试浏览器模拟器
+    if let Ok(sim_result) = simulator::start_simulator(Some(raw_ucode.to_string()), config).await {
+        if let Some(bearer) = sim_result.bearer_auth_value {
+            return Ok(bearer);
+        }
+    }
+    // 回退：调用 token 接口，使用 access_token 构造 Bearer
+    let user = get_user_info(raw_ucode, client, config).await?;
+    Ok(format!("Bearer {}", user.access_token))
+}
+
+
 /// 传入 UCode 以获得用户信息
 pub async fn get_user_info(
     raw_ucode: &str,
@@ -65,7 +84,7 @@ pub async fn get_user_info(
             if e.to_string().contains("401") {
                 error!("Error while fetching info: {}", e);
                 error!("Attempting retry with browser simulation...");
-                
+
                 let server_basic_auth = get_server_basic_auth(Some(raw_ucode.to_string()), config).await?;
                 try_get_user_info(&request_url, &ucode, &server_basic_auth, client).await
             } else {

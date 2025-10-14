@@ -39,5 +39,14 @@ async fn test_auth_service() {
             eprintln!("Failed to get user info: {}", e);
         }
     }
+
+    // Extra: verify simulator bearer token (fallback to token API)
+    match backend::parser::auth::get_server_bearer_auth(&test_ucode, &client, &config).await {
+        Ok(bearer) => {
+            println!("Simulator bearer: {}", bearer);
+        }
+        Err(e) => eprintln!("Failed to get simulator bearer: {}", e),
+    }
+
 }
 

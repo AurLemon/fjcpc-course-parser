@@ -1,11 +1,12 @@
 use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use tracing::error;
 
 use crate::utils::config::AppConfig;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct SchoolYear {
     pub school_year: String,
     pub semester: u32,
@@ -14,26 +15,26 @@ pub struct SchoolYear {
     pub end_time: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct WeekInfo {
     pub week: u32,
     pub start_time: String,
     pub end_time: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct DayCourse {
     pub weekday: u32,
     pub course: Vec<CourseSlot>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CourseSlot {
     pub course_number: u32,
     pub course_info: Option<CourseInfo>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CourseInfo {
     pub name: String,
     pub classroom: Option<String>,
