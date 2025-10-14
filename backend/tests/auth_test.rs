@@ -14,7 +14,7 @@ async fn test_auth_service() {
     println!("Testing auth service with ucode: {}", test_ucode);
 
     // Create HTTP client
-    let client = create_http_client().expect("Failed to create HTTP client");
+    let client = create_http_client().await.expect("Failed to create HTTP client");
 
     // Test basic auth
     let basic_auth = get_basic_auth();

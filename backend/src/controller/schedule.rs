@@ -89,7 +89,7 @@ pub async fn post_schedule(
     config: web::Data<AppConfig>,
     payload: web::Json<ScheduleRequest>,
 ) -> impl Responder {
-    let client = match create_http_client() {
+    let client = match create_http_client().await {
         Ok(c) => c,
         Err(e) => {
             let resp: ApiResponse<serde_json::Value> = ApiResponse::error(500, serde_json::json!({}), format!("Create client failed: {}", e));
@@ -195,7 +195,7 @@ pub async fn get_user_info_endpoint(
         return HttpResponse::BadRequest().json(resp);
     };
 
-    let client = match create_http_client() {
+    let client = match create_http_client().await {
         Ok(c) => c,
         Err(e) => {
             let resp: ApiResponse<serde_json::Value> = ApiResponse::error(500, serde_json::json!({}), format!("Create client failed: {}", e));
@@ -292,7 +292,7 @@ pub async fn get_schedule_meta(
         return HttpResponse::BadRequest().json(resp);
     };
 
-    let client = match create_http_client() {
+    let client = match create_http_client().await {
         Ok(c) => c,
         Err(e) => {
             let resp: ApiResponse<serde_json::Value> = ApiResponse::error(500, serde_json::json!({}), format!("Create client failed: {}", e));

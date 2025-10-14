@@ -15,7 +15,7 @@ async fn test_schedule_service() {
     println!("Testing schedule service with ucode: {}", test_ucode);
 
     // HTTP client
-    let client = create_http_client().expect("Failed to create HTTP client");
+    let client = create_http_client().await.expect("Failed to create HTTP client");
 
     // Get user info first
     let user_info = match get_user_info(&test_ucode, &client, &config).await {
