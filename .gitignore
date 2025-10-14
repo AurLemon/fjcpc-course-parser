@@ -90,4 +90,11 @@ dist-ssr
 *.sw?
 
 # test files
-/backend/test/data
+/node_backend/test/data
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+.cargo/
+.rustc_info.json
