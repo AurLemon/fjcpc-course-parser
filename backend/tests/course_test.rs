@@ -1,4 +1,5 @@
 // tests/course_test.rs
+// 课程服务测试
 use backend::parser::auth::get_user_info;
 use backend::parser::schedule::{get_school_year, get_semester};
 use backend::services::course::get_all_courses;
@@ -10,44 +11,44 @@ use std::path::Path;
 #[tokio::test]
 async fn test_course_service() {
     dotenvy::dotenv().ok();
-    
+
     let config = AppConfig::from_env();
     let test_ucode = config.test_student_ucode.clone()
         .expect("TEST_STUDENT_UCODE must be set in .env");
 
-    println!("Testing course service with ucode: {}", test_ucode);
+    println!("测试课程服务，使用 ucode: {}", test_ucode);
 
-    // HTTP client
-    let client = create_http_client().await.expect("Failed to create HTTP client");
+    // 创建 HTTP 客户端
+    let client = create_http_client().await.expect("创建 HTTP 客户端失败");
 
-    // Get user info first
+    // 首先获取用户信息
     let user_info = match get_user_info(&test_ucode, &client, &config).await {
         Ok(info) => info,
         Err(e) => {
-            eprintln!("Failed to get user info: {}", e);
+            eprintln!("获取用户信息失败: {}", e);
             return;
         }
     };
 
-    // Get school year
+    // 获取学年信息
     let school_years = match get_school_year(&user_info.access_token, &client, &config).await {
         Ok(years) => years,
         Err(e) => {
-            eprintln!("Failed to get school year: {}", e);
+            eprintln!("获取学年信息失败: {}", e);
             return;
         }
     };
 
-    // Find current semester
+    // 查找当前学期
     let current_semester = match school_years.iter().find(|s| s.is_current_semester) {
         Some(semester) => semester,
         None => {
-            println!("No current semester found");
+            println!("未找到当前学期");
             return;
         }
     };
 
-    // Get semester weeks
+    // 获取学期周信息
     let semester_num_str = current_semester.semester.to_string();
     let semester = match get_semester(
         &user_info.access_token,
@@ -58,12 +59,12 @@ async fn test_course_service() {
     ).await {
         Ok(sem) => sem,
         Err(e) => {
-            eprintln!("Failed to get semester: {}", e);
+            eprintln!("获取学期信息失败: {}", e);
             return;
         }
     };
 
-    // Get all courses
+    // 获取所有课程
     match get_all_courses(
         &user_info.access_token,
         &user_info.student_id,
@@ -72,25 +73,25 @@ async fn test_course_service() {
         &config,
     ).await {
         Ok(all_courses) => {
-            // Sort by week number for consistent output
+            // 按周数排序，保证输出一致性
             let mut sorted_courses: Vec<_> = all_courses.into_iter().collect();
             sorted_courses.sort_by_key(|(week, _)| *week);
-            
+
             let courses_json = serde_json::to_string_pretty(&sorted_courses.into_iter().collect::<std::collections::HashMap<_, _>>())
                 .unwrap();
-            
-            println!("All courses: {}", courses_json);
 
-            // Save to file
+            println!("所有课程: {}", courses_json);
+
+            // 保存到文件
             let file_path = Path::new("tests/data/all_courses.json");
             if let Some(parent) = file_path.parent() {
                 fs::create_dir_all(parent).ok();
             }
-            fs::write(file_path, courses_json).expect("Failed to write file");
-            println!("Saved to {:?}", file_path);
+            fs::write(file_path, courses_json).expect("写入文件失败");
+            println!("已保存到 {:?}", file_path);
         }
         Err(e) => {
-            eprintln!("Failed to get all courses: {}", e);
+            eprintln!("获取所有课程失败: {}", e);
         }
     }
 }
