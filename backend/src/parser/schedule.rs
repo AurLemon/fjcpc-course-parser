@@ -49,6 +49,8 @@ pub struct CourseInfo {
 
 #[derive(Debug, Deserialize)]
 struct SchoolYearResponse {
+    code: i32,
+    msg: Option<String>,
     data: Vec<SchoolYearData>,
 }
 
@@ -57,17 +59,21 @@ struct SchoolYearData {
     xn: String,
     xq: String,
     dqxqbj: String,
-    qsrq: String,
-    jsrq: String,
+    qsrq: Option<String>,
+    jsrq: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
 struct SemesterResponse {
+    code: i32,
+    msg: Option<String>,
     data: Vec<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize)]
 struct WeekCourseResponse {
+    code: i32,
+    msg: Option<String>,
     data: Vec<Vec<String>>,
 }
 
@@ -97,8 +103,8 @@ pub async fn get_school_year(user_token: &str, client: &Client, config: &AppConf
             school_year: item.xn,
             semester: item.xq.parse().unwrap_or(0),
             is_current_semester: item.dqxqbj.parse::<u32>().unwrap_or(0) != 0,
-            start_time: item.qsrq,
-            end_time: item.jsrq,
+            start_time: item.qsrq.unwrap_or_default(),
+            end_time: item.jsrq.unwrap_or_default(),
         })
         .collect();
 
