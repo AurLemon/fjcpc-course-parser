@@ -10,10 +10,18 @@ use crate::utils::simulator;
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct UserInfo {
+    /// 访问令牌（用于调用学校 API）
     pub access_token: String,
+    /// 刷新令牌（用于更新访问令牌）
     pub refresh_token: String,
+    /// 学号
+    #[schema(example = "245810101")]
     pub student_id: String,
+    /// 手机号
+    #[schema(example = "138****1234")]
     pub student_phone: String,
+    /// 真实姓名
+    #[schema(example = "张三")]
     pub student_realname: String,
 }
 

@@ -51,7 +51,6 @@ async fn main() -> std::io::Result<()> {
             }))
             .service(
                 web::scope("/api")
-                    .configure(routes::course::configure)
                     .configure(routes::schedule::configure)
             );
 

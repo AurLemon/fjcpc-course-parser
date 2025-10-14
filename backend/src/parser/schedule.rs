@@ -8,42 +8,81 @@ use crate::utils::config::AppConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct SchoolYear {
+    /// 学年（例如："2024-2025"）
+    #[schema(example = "2024-2025")]
     pub school_year: String,
+    /// 学期（1=第一学期，2=第二学期）
+    #[schema(example = 1)]
     pub semester: u32,
+    /// 是否为当前学期
     pub is_current_semester: bool,
+    /// 学期开始日期（格式：YYYY-MM-DD）
+    #[schema(example = "2024-09-01")]
     pub start_time: String,
+    /// 学期结束日期（格式：YYYY-MM-DD）
+    #[schema(example = "2025-01-15")]
     pub end_time: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct WeekInfo {
+    /// 周号（1-22）
+    #[schema(example = 1)]
     pub week: u32,
+    /// 本周开始日期（格式：YYYY-MM-DD）
+    #[schema(example = "2024-09-01")]
     pub start_time: String,
+    /// 本周结束日期（格式：YYYY-MM-DD）
+    #[schema(example = "2024-09-07")]
     pub end_time: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct DayCourse {
+    /// 星期几（1=周一，2=周二，...，7=周日）
+    #[schema(example = 1)]
     pub weekday: u32,
+    /// 当天的课程时段列表
     pub course: Vec<CourseSlot>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CourseSlot {
+    /// 课程节次（1-12，通常 1-4 为上午，5-8 为下午，9-12 为晚上）
+    #[schema(example = 1)]
     pub course_number: u32,
+    /// 课程信息（如果该时段有课则包含详细信息，否则为 null）
     pub course_info: Option<CourseInfo>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct CourseInfo {
+    /// 课程名称
+    #[schema(example = "高等数学")]
     pub name: String,
+    /// 教室（可能为空）
+    #[schema(example = "教学楼A101")]
     pub classroom: Option<String>,
+    /// 班级
+    #[schema(example = "计算机2401")]
     pub class: String,
+    /// 授课教师列表
+    #[schema(example = json!(["张老师", "李老师"]))]
     pub teacher: Vec<String>,
+    /// 课程节次（同 CourseSlot.course_number）
+    #[schema(example = 1)]
     pub course_number: u32,
+    /// 星期几（同 DayCourse.weekday）
+    #[schema(example = 1)]
     pub weekday: u32,
+    /// 课程颜色标识（用于前端显示）
+    #[schema(example = "#FF5733")]
     pub color: String,
+    /// 连续课程节数（例如：2 表示连续 2 节课）
+    #[schema(example = 2)]
     pub continuous_course: u32,
+    /// 课程代码
+    #[schema(example = "CS101")]
     pub code: String,
 }
 

@@ -12,23 +12,45 @@ use crate::utils::{config::AppConfig, http::create_http_client, response::ApiRes
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ScheduleRequest {
+    /// 学生 UCode
+    ///
+    /// 示例：`"ABC123DEF456GHI789JKL012MNO345PQR678"`
+    #[schema(example = "ABC123DEF456GHI789JKL012MNO345PQR678")]
     pub ucode: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ScheduleResponse {
+    /// 课表数据，按周号聚合
+    ///
+    /// Key: 周号（1-22）
+    /// Value: 该周的每日课程列表（周一到周日）
     pub weeks: HashMap<u32, Vec<DayCourse>>,
 }
 
-/// POST /api/schedule
-/// 传入 ucode，返回该学生当前学期全量课表（按周聚合）
+/// 获取学生课表
+///
+/// 传入学生的 UCode，返回当前学期的完整课表数据（按周聚合）。
+///
+/// **功能说明：**
+/// - 自动识别当前学期
+/// - 并发获取所有周的课程数据
+/// - 返回按周号聚合的课表
+///
+/// **返回数据：**
+/// - 每周包含 7 天的课程（周一到周日）
+/// - 每天包含多个课程时段
+/// - 课程信息包括课程名称、教室、教师等详细信息
 #[utoipa::path(
     post,
     path = "/api/schedule",
     tag = "schedule",
     request_body = ScheduleRequest,
     responses(
-        (status = 200, description = "OK", body = ApiResponse<ScheduleResponse>)
+        (status = 200, description = "成功获取课表数据", body = ApiResponse<ScheduleResponse>),
+        (status = 400, description = "请求参数错误"),
+        (status = 404, description = "未找到当前学期"),
+        (status = 500, description = "服务器内部错误")
     )
 )]
 pub async fn post_schedule(
@@ -105,14 +127,32 @@ pub async fn post_schedule(
     HttpResponse::Ok().json(resp)
 }
 
-/// GET /api/auth/userinfo?ucode=xxx
-/// 方便测试：返回用户基本信息
+/// 获取用户基本信息
+///
+/// 根据学生的 UCode 获取用户的基本信息，包括访问令牌、学号、姓名等。
+///
+/// **功能说明：**
+/// - 用于测试和调试
+/// - 返回用户的认证令牌和基本资料
+///
+/// **返回数据：**
+/// - access_token: 访问令牌（用于后续 API 调用）
+/// - refresh_token: 刷新令牌
+/// - student_id: 学号
+/// - student_phone: 手机号
+/// - student_realname: 真实姓名
 #[utoipa::path(
     get,
     path = "/api/auth/userinfo",
     tag = "auth",
-    params(("ucode" = String, Query, description = "学生 UCode")),
-    responses((status = 200, description = "OK", body = ApiResponse<auth::UserInfo>))
+    params(
+        ("ucode" = String, Query, description = "学生 UCode", example = "ABC123DEF456GHI789JKL012MNO345PQR678")
+    ),
+    responses(
+        (status = 200, description = "成功获取用户信息", body = ApiResponse<auth::UserInfo>),
+        (status = 400, description = "缺少 ucode 参数"),
+        (status = 500, description = "服务器内部错误")
+    )
 )]
 pub async fn get_user_info_endpoint(
     config: web::Data<AppConfig>,
@@ -140,18 +180,36 @@ pub async fn get_user_info_endpoint(
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ScheduleMeta {
+    /// 学年列表（包含所有历史学年和当前学年）
     pub years: Vec<SchoolYear>,
+    /// 当前学期的周信息列表
     pub weeks: Vec<WeekInfo>,
 }
 
-/// GET /api/schedule/meta?ucode=xxx
-/// 方便测试：返回当前学年列表+当前学期周信息
+/// 获取学年和学期元数据
+///
+/// 返回所有学年列表和当前学期的周信息，用于了解学期结构。
+///
+/// **功能说明：**
+/// - 获取所有历史学年和当前学年
+/// - 获取当前学期的所有周信息（包括起止日期）
+/// - 用于测试和调试
+///
+/// **返回数据：**
+/// - years: 学年列表（标记当前学期）
+/// - weeks: 周信息列表（周号、起止日期）
 #[utoipa::path(
     get,
     path = "/api/schedule/meta",
     tag = "schedule",
-    params(("ucode" = String, Query, description = "学生 UCode")),
-    responses((status = 200, description = "OK", body = ApiResponse<ScheduleMeta>))
+    params(
+        ("ucode" = String, Query, description = "学生 UCode", example = "ABC123DEF456GHI789JKL012MNO345PQR678")
+    ),
+    responses(
+        (status = 200, description = "成功获取元数据", body = ApiResponse<ScheduleMeta>),
+        (status = 400, description = "缺少 ucode 参数"),
+        (status = 500, description = "服务器内部错误")
+    )
 )]
 pub async fn get_schedule_meta(
     config: web::Data<AppConfig>,
@@ -211,7 +269,21 @@ pub async fn get_schedule_meta(
     HttpResponse::Ok().json(ApiResponse::success(200, meta, "OK"))
 }
 
-/// GET /api/ping
+/// 健康检查
+///
+/// 用于检查 API 服务是否正常运行。
+///
+/// **功能说明：**
+/// - 简单的健康检查端点
+/// - 返回 pong 表示服务正常
+#[utoipa::path(
+    get,
+    path = "/api/ping",
+    tag = "test",
+    responses(
+        (status = 200, description = "服务正常运行")
+    )
+)]
 pub async fn ping() -> impl Responder {
     HttpResponse::Ok().json(ApiResponse::success(200, serde_json::json!({"pong": true}), "OK"))
 }
