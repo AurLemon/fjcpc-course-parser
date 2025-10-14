@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use utoipa::ToSchema;
 
 use crate::parser::{
-    auth,
+    auth::{self, UserInfo},
     schedule::{DayCourse, SchoolYear, WeekInfo},
 };
 use crate::services::course as course_service;
@@ -28,6 +28,38 @@ pub struct ScheduleResponse {
     pub weeks: HashMap<u32, Vec<DayCourse>>,
 }
 
+/// 课表 API 响应（具体类型，用于 OpenAPI 文档）
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ScheduleApiResponse {
+    /// HTTP 状态码
+    #[schema(example = 200)]
+    pub code: u16,
+    /// 响应状态
+    #[schema(example = "success")]
+    pub status: String,
+    /// 课表数据
+    pub data: ScheduleResponse,
+    /// 响应消息
+    #[schema(example = "OK")]
+    pub message: String,
+}
+
+/// 用户信息 API 响应（具体类型，用于 OpenAPI 文档）
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct UserInfoApiResponse {
+    /// HTTP 状态码
+    #[schema(example = 200)]
+    pub code: u16,
+    /// 响应状态
+    #[schema(example = "success")]
+    pub status: String,
+    /// 用户信息数据
+    pub data: UserInfo,
+    /// 响应消息
+    #[schema(example = "OK")]
+    pub message: String,
+}
+
 /// 获取学生课表
 ///
 /// 传入学生的 UCode，返回当前学期的完整课表数据（按周聚合）。
@@ -44,10 +76,10 @@ pub struct ScheduleResponse {
 #[utoipa::path(
     post,
     path = "/api/schedule",
-    tag = "schedule",
+    tag = "Schedule",
     request_body = ScheduleRequest,
     responses(
-        (status = 200, description = "成功获取课表数据", body = ApiResponse<ScheduleResponse>),
+        (status = 200, description = "成功获取课表数据", body = ScheduleApiResponse),
         (status = 400, description = "请求参数错误"),
         (status = 404, description = "未找到当前学期"),
         (status = 500, description = "服务器内部错误")
@@ -144,12 +176,12 @@ pub async fn post_schedule(
 #[utoipa::path(
     get,
     path = "/api/auth/userinfo",
-    tag = "auth",
+    tag = "Auth",
     params(
         ("ucode" = String, Query, description = "学生 UCode", example = "ABC123DEF456GHI789JKL012MNO345PQR678")
     ),
     responses(
-        (status = 200, description = "成功获取用户信息", body = ApiResponse<auth::UserInfo>),
+        (status = 200, description = "成功获取用户信息", body = UserInfoApiResponse),
         (status = 400, description = "缺少 ucode 参数"),
         (status = 500, description = "服务器内部错误")
     )
@@ -186,6 +218,46 @@ pub struct ScheduleMeta {
     pub weeks: Vec<WeekInfo>,
 }
 
+/// 学年元数据 API 响应（具体类型，用于 OpenAPI 文档）
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ScheduleMetaApiResponse {
+    /// HTTP 状态码
+    #[schema(example = 200)]
+    pub code: u16,
+    /// 响应状态
+    #[schema(example = "success")]
+    pub status: String,
+    /// 学年和周信息数据
+    pub data: ScheduleMeta,
+    /// 响应消息
+    #[schema(example = "OK")]
+    pub message: String,
+}
+
+/// Ping 响应数据
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct PingData {
+    /// Pong 标识
+    #[schema(example = true)]
+    pub pong: bool,
+}
+
+/// Ping API 响应（具体类型，用于 OpenAPI 文档）
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct PingApiResponse {
+    /// HTTP 状态码
+    #[schema(example = 200)]
+    pub code: u16,
+    /// 响应状态
+    #[schema(example = "success")]
+    pub status: String,
+    /// Ping 数据
+    pub data: PingData,
+    /// 响应消息
+    #[schema(example = "OK")]
+    pub message: String,
+}
+
 /// 获取学年和学期元数据
 ///
 /// 返回所有学年列表和当前学期的周信息，用于了解学期结构。
@@ -201,12 +273,12 @@ pub struct ScheduleMeta {
 #[utoipa::path(
     get,
     path = "/api/schedule/meta",
-    tag = "schedule",
+    tag = "Schedule",
     params(
         ("ucode" = String, Query, description = "学生 UCode", example = "ABC123DEF456GHI789JKL012MNO345PQR678")
     ),
     responses(
-        (status = 200, description = "成功获取元数据", body = ApiResponse<ScheduleMeta>),
+        (status = 200, description = "成功获取元数据", body = ScheduleMetaApiResponse),
         (status = 400, description = "缺少 ucode 参数"),
         (status = 500, description = "服务器内部错误")
     )
@@ -279,9 +351,9 @@ pub async fn get_schedule_meta(
 #[utoipa::path(
     get,
     path = "/api/ping",
-    tag = "test",
+    tag = "Test",
     responses(
-        (status = 200, description = "服务正常运行")
+        (status = 200, description = "服务正常运行", body = PingApiResponse)
     )
 )]
 pub async fn ping() -> impl Responder {

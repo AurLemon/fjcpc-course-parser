@@ -15,7 +15,7 @@ pub struct UserInfo {
     /// 刷新令牌（用于更新访问令牌）
     pub refresh_token: String,
     /// 学号
-    #[schema(example = "245810101")]
+    #[schema(example = "245800001")]
     pub student_id: String,
     /// 手机号
     #[schema(example = "138****1234")]

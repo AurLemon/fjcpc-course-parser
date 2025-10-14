@@ -20,7 +20,12 @@ use crate::parser::auth::UserInfo;
     components(schemas(
         controller::schedule::ScheduleRequest,
         controller::schedule::ScheduleResponse,
+        controller::schedule::ScheduleApiResponse,
         controller::schedule::ScheduleMeta,
+        controller::schedule::ScheduleMetaApiResponse,
+        controller::schedule::UserInfoApiResponse,
+        controller::schedule::PingData,
+        controller::schedule::PingApiResponse,
         SchoolYear,
         WeekInfo,
         DayCourse,
