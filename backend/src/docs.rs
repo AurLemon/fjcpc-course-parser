@@ -3,6 +3,7 @@ use utoipa::OpenApi;
 use crate::controller;
 use crate::parser::schedule::{CourseInfo, CourseSlot, DayCourse, SchoolYear, WeekInfo};
 use crate::parser::auth::UserInfo;
+use crate::services::stats::StatsResponse;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -15,6 +16,7 @@ use crate::parser::auth::UserInfo;
         controller::schedule::post_schedule,
         controller::schedule::get_user_info_endpoint,
         controller::schedule::get_schedule_meta,
+        controller::schedule::get_stats,
         controller::schedule::ping,
     ),
     components(schemas(
@@ -24,6 +26,7 @@ use crate::parser::auth::UserInfo;
         controller::schedule::ScheduleMeta,
         controller::schedule::ScheduleMetaApiResponse,
         controller::schedule::UserInfoApiResponse,
+        controller::schedule::StatsApiResponse,
         controller::schedule::PingData,
         controller::schedule::PingApiResponse,
         SchoolYear,
@@ -32,10 +35,12 @@ use crate::parser::auth::UserInfo;
         CourseSlot,
         CourseInfo,
         UserInfo,
+        StatsResponse,
     )),
     tags(
         (name = "Schedule", description = "课表相关接口 - 提供课表查询、学年学期信息等功能"),
         (name = "Auth", description = "认证相关接口 - 提供用户信息查询功能"),
+        (name = "Stats", description = "统计接口 - 提供访问统计信息"),
         (name = "Test", description = "测试接口 - 用于开发和调试")
     )
 )]

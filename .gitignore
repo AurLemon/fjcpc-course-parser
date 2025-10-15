@@ -98,3 +98,8 @@ Cargo.lock
 **/*.rs.bk
 .cargo/
 .rustc_info.json
+
+# SQLite database
+*.db
+*.db-shm
+*.db-wal

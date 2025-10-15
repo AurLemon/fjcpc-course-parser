@@ -1,14 +1,18 @@
 use actix_web::{web, HttpResponse, Responder};
+use sea_orm::DatabaseConnection;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::time::Instant;
 use utoipa::ToSchema;
 
 use crate::parser::{
     auth::{self, UserInfo},
     schedule::{DayCourse, SchoolYear, WeekInfo},
 };
-use crate::services::course as course_service;
-use crate::utils::{config::AppConfig, http::create_http_client, response::ApiResponse};
+use crate::services::{course as course_service, stats};
+use crate::utils::{
+    cache, config::AppConfig, http::create_http_client, response::ApiResponse,
+};
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ScheduleRequest {
@@ -87,8 +91,20 @@ pub struct UserInfoApiResponse {
 )]
 pub async fn post_schedule(
     config: web::Data<AppConfig>,
+    db: web::Data<DatabaseConnection>,
     payload: web::Json<ScheduleRequest>,
 ) -> impl Responder {
+    let start_time = Instant::now();
+    let ucode = payload.ucode.clone();
+
+    // 检查缓存
+    if let Some(cached_data) = cache::get_cached_schedule(&ucode) {
+        tracing::info!("Cache hit for ucode: {}", ucode);
+        let data = ScheduleResponse { weeks: cached_data };
+        let resp = ApiResponse::success(200, data, "OK (from cache)");
+        return HttpResponse::Ok().json(resp);
+    }
+
     let client = match create_http_client().await {
         Ok(c) => c,
         Err(e) => {
@@ -96,8 +112,6 @@ pub async fn post_schedule(
             return HttpResponse::InternalServerError().json(resp);
         }
     };
-
-    let ucode = payload.ucode.clone();
 
     // 1) 获取用户信息
     let user = match auth::get_user_info(&ucode, &client, &config).await {
@@ -153,6 +167,27 @@ pub async fn post_schedule(
             return HttpResponse::InternalServerError().json(resp);
         }
     };
+
+    // 设置缓存
+    cache::set_cached_schedule(&ucode, weeks_map.clone());
+
+    // 记录统计和日志
+    let duration_ms = start_time.elapsed().as_millis() as i64;
+
+    // 异步记录日志和统计（不阻塞响应）
+    let db_clone = db.get_ref().clone();
+    let ucode_clone = ucode.clone();
+    let token_clone = user.access_token.clone();
+    let student_id_clone = user.student_id.clone();
+
+    tokio::spawn(async move {
+        if let Err(e) = stats::log_request(&db_clone, &token_clone, &student_id_clone, duration_ms).await {
+            tracing::error!("Failed to log request: {}", e);
+        }
+        if let Err(e) = stats::update_stats(&db_clone, &ucode_clone).await {
+            tracing::error!("Failed to update stats: {}", e);
+        }
+    });
 
     let data = ScheduleResponse { weeks: weeks_map };
     let resp = ApiResponse::success(200, data, "OK");
@@ -358,5 +393,54 @@ pub async fn get_schedule_meta(
 )]
 pub async fn ping() -> impl Responder {
     HttpResponse::Ok().json(ApiResponse::success(200, serde_json::json!({"pong": true}), "OK"))
+}
+
+/// 统计信息响应
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct StatsApiResponse {
+    /// HTTP 状态码
+    #[schema(example = 200)]
+    pub code: u16,
+    /// 响应状态
+    #[schema(example = "success")]
+    pub status: String,
+    /// 统计数据
+    pub data: stats::StatsResponse,
+    /// 响应消息
+    #[schema(example = "OK")]
+    pub message: String,
+}
+
+/// 获取访问统计信息
+///
+/// 返回 API 的访问统计数据，包括总请求数、唯一用户数等。
+///
+/// **功能说明：**
+/// - 统计所有访问 /api/schedule 接口的请求
+/// - 保护用户隐私，仅统计数量
+#[utoipa::path(
+    get,
+    path = "/api/stats",
+    tag = "Stats",
+    responses(
+        (status = 200, description = "成功获取统计信息", body = StatsApiResponse),
+        (status = 500, description = "服务器内部错误")
+    )
+)]
+pub async fn get_stats(db: web::Data<DatabaseConnection>) -> impl Responder {
+    match stats::get_stats(db.get_ref()).await {
+        Ok(data) => {
+            let resp = ApiResponse::success(200, data, "OK");
+            HttpResponse::Ok().json(resp)
+        }
+        Err(e) => {
+            let resp: ApiResponse<serde_json::Value> = ApiResponse::error(
+                500,
+                serde_json::json!({}),
+                format!("Failed to get stats: {}", e),
+            );
+            HttpResponse::InternalServerError().json(resp)
+        }
+    }
 }
 

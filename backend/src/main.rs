@@ -1,4 +1,5 @@
 mod controller;
+mod db;
 mod parser;
 mod routes;
 mod services;
@@ -27,6 +28,12 @@ async fn main() -> std::io::Result<()> {
     info!("Loaded config: {:?}", config);
     info!("Running in {:?} mode", config.app_env);
 
+    // 初始化数据库
+    let db = db::connection::init_db()
+        .await
+        .expect("Failed to initialize database");
+    info!("Database initialized");
+
     // 启动服务器
     let bind_address = format!("127.0.0.1:{}", config.port);
     info!("Starting server at http://{}", bind_address);
@@ -37,6 +44,7 @@ async fn main() -> std::io::Result<()> {
 
         let mut app = App::new()
             .app_data(web::Data::new(config.clone()))
+            .app_data(web::Data::new(db.clone()))
             .wrap(middleware::Logger::default())
             .wrap(cors)
             .route("/", web::get().to(move || async move {

@@ -9,14 +9,31 @@ const loading = ref(false);
 const scheduleData = ref(null);
 const error = ref("");
 const loadingProgress = ref(0);
+const stats = ref(null);
 
-// 从 localStorage 加载 ucode
+// 从 localStorage 加载 ucode 并获取统计信息
 onMounted(() => {
   const savedUcode = localStorage.getItem("fjcpc_ucode");
   if (savedUcode) {
     ucode.value = savedUcode;
   }
+  fetchStats();
 });
+
+// 获取统计信息
+const fetchStats = async () => {
+  try {
+    const response = await fetch("http://127.0.0.1:4000/api/stats");
+    if (response.ok) {
+      const result = await response.json();
+      if (result.status === "success") {
+        stats.value = result.data;
+      }
+    }
+  } catch (err) {
+    console.error("Failed to fetch stats:", err);
+  }
+};
 
 // 模拟加载进度
 const simulateProgress = () => {
@@ -69,6 +86,8 @@ const fetchSchedule = async () => {
 
     if (result.status === "success") {
       scheduleData.value = result.data;
+      // 刷新统计信息
+      setTimeout(() => fetchStats(), 1000);
     } else {
       throw new Error(result.message || "获取课表失败");
     }
@@ -83,6 +102,35 @@ const fetchSchedule = async () => {
 const clearData = () => {
   scheduleData.value = null;
   error.value = "";
+};
+
+// 格式化时间戳
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return "暂无数据";
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
+
+  // 小于1分钟
+  if (diff < 60000) {
+    return "刚刚";
+  }
+  // 小于1小时
+  if (diff < 3600000) {
+    return `${Math.floor(diff / 60000)} 分钟前`;
+  }
+  // 小于1天
+  if (diff < 86400000) {
+    return `${Math.floor(diff / 3600000)} 小时前`;
+  }
+  // 大于1天
+  return date.toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 </script>
 
@@ -192,6 +240,41 @@ const clearData = () => {
           class="mt-4 p-3 bg-red-50 border-[0.5px] border-red-200 rounded-xl text-red-600 text-sm"
         >
           {{ error }}
+        </div>
+      </div>
+
+      <!-- 统计信息 -->
+      <div
+        v-if="stats"
+        v-motion
+        :initial="{ opacity: 0, y: 20 }"
+        :enter="{
+          opacity: 1,
+          y: 0,
+          transition: { duration: 600, delay: 200, ease: 'easeOut' },
+        }"
+        class="bg-white rounded-2xl shadow-sm border-[0.5px] border-gray-200 p-6 mb-6"
+      >
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">📊 访问统计</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="text-sm text-gray-600 mb-1">总请求数</div>
+            <div class="text-2xl font-bold text-gray-900">
+              {{ stats.total_requests.toLocaleString() }}
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="text-sm text-gray-600 mb-1">唯一用户数</div>
+            <div class="text-2xl font-bold text-gray-900">
+              {{ stats.unique_users.toLocaleString() }}
+            </div>
+          </div>
+          <div class="bg-gray-50 rounded-xl p-4">
+            <div class="text-sm text-gray-600 mb-1">最后更新</div>
+            <div class="text-sm font-medium text-gray-900">
+              {{ formatTimestamp(stats.last_updated_at) }}
+            </div>
+          </div>
         </div>
       </div>
 
