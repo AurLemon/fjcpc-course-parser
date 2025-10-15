@@ -12,6 +12,7 @@ use crate::parser::{
 use crate::services::{course as course_service, stats};
 use crate::utils::{
     cache, config::AppConfig, http::create_http_client, response::ApiResponse,
+    schedule as schedule_utils,
 };
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -30,6 +31,8 @@ pub struct ScheduleResponse {
     /// Key: 周号（1-22）
     /// Value: 该周的每日课程列表（周一到周日）
     pub weeks: HashMap<u32, Vec<DayCourse>>,
+    /// 课程时间表（根据学期开始日期自动判断冬夏季）
+    pub time_table: Vec<(String, String)>,
 }
 
 /// 课表 API 响应（具体类型，用于 OpenAPI 文档）
@@ -100,7 +103,14 @@ pub async fn post_schedule(
     // 检查缓存
     if let Some(cached_data) = cache::get_cached_schedule(&ucode) {
         tracing::info!("Cache hit for ucode: {}", ucode);
-        let data = ScheduleResponse { weeks: cached_data };
+        // 从缓存获取时间表（使用当前日期判断）
+        let time_table = schedule_utils::get_course_time_table(
+            &chrono::Local::now().format("%Y-%m-%d").to_string()
+        ).times;
+        let data = ScheduleResponse {
+            weeks: cached_data,
+            time_table,
+        };
         let resp = ApiResponse::success(200, data, "OK (from cache)");
         return HttpResponse::Ok().json(resp);
     }
@@ -154,7 +164,7 @@ pub async fn post_schedule(
     };
 
     // 4) 并发获取所有周课程
-    let weeks_map: HashMap<u32, Vec<DayCourse>> = match course_service::get_all_courses(
+    let mut weeks_map: HashMap<u32, Vec<DayCourse>> = match course_service::get_all_courses(
         &user.access_token,
         &user.student_id,
         &semester_weeks,
@@ -167,6 +177,11 @@ pub async fn post_schedule(
             return HttpResponse::InternalServerError().json(resp);
         }
     };
+
+    // 5) 对每周的课程按 weekday 排序
+    for day_courses in weeks_map.values_mut() {
+        day_courses.sort_by_key(|dc| dc.weekday);
+    }
 
     // 设置缓存
     cache::set_cached_schedule(&ucode, weeks_map.clone());
@@ -189,7 +204,13 @@ pub async fn post_schedule(
         }
     });
 
-    let data = ScheduleResponse { weeks: weeks_map };
+    // 根据学期开始日期判断冬夏季作息时间
+    let time_table = schedule_utils::get_course_time_table(&current_semester.start_time).times;
+
+    let data = ScheduleResponse {
+        weeks: weeks_map,
+        time_table,
+    };
     let resp = ApiResponse::success(200, data, "OK");
     HttpResponse::Ok().json(resp)
 }
