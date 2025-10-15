@@ -247,7 +247,7 @@ const courseGrid = computed(() => {
                 :class="
                   cn(
                     'p-3 rounded-lg text-white text-xs',
-                    'hover:shadow-lg hover:scale-[1.02] transition-all duration-200',
+                    'hover:scale-[1.01] transition-all duration-200',
                     'cursor-pointer flex flex-col justify-center'
                   )
                 "
