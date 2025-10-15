@@ -1,153 +1,156 @@
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue';
-import CourseTable from './components/CourseTable.vue';
-import TutorialModal from './components/TutorialModal.vue';
+import { ref, onMounted, computed, watch } from 'vue'
+import CourseTable from './components/CourseTable.vue'
+import TutorialModal from './components/TutorialModal.vue'
 
-const inputValue = ref('');
-const loading = ref(false);
-const scheduleData = ref(null);
-const showTutorial = ref(false);
-const toast = ref({ show: false, message: '', type: 'success' });
+import IconGithub from '@/assets/icon-github.svg'
+import IconClear from '@/assets/icon-clear.svg'
+import IconSearch from '@/assets/icon-search.svg'
+import IconChevronUp from '@/assets/icon-chevron-up.svg'
+import IconSun from '@/assets/icon-sun.svg'
+import IconMoon from '@/assets/icon-moon.svg'
+import IconLaptop from '@/assets/icon-laptop.svg'
+import IconSuccess from '@/assets/icon-success.svg'
+import IconInfo from '@/assets/icon-info.svg'
+import IconBooks from '@/assets/icon-books.svg'
+import IconHelp from '@/assets/icon-help.svg'
+
+const inputValue = ref('')
+const loading = ref(false)
+const scheduleData = ref(null)
+const showTutorial = ref(false)
+const toast = ref({ show: false, message: '', type: 'success' })
 
 // 主题模式：'system' | 'light' | 'dark'
-const themeMode = ref('system');
+const themeMode = ref('system')
 
 // 简单的时令提示（无需先请求课表）
-const seasonHint = ref('');
+const seasonHint = ref('')
 
 // 高级选项：并行与缓存（默认并行+开启缓存；下拉默认收起）
-const showAdvanced = ref(false);
-const optParallel = ref(true);
-const optUseCache = ref(true);
+const showAdvanced = ref(false)
+const optParallel = ref(true)
+const optUseCache = ref(true)
 
 // 从 localStorage 加载 ucode 和主题，并并行拉取当前时令
 onMounted(async () => {
-  const savedUcode = localStorage.getItem('fjcpc_ucode');
+  const savedUcode = localStorage.getItem('fjcpc_ucode')
   if (savedUcode) {
-    inputValue.value = savedUcode;
+    inputValue.value = savedUcode
   }
 
   // 读取高级选项本地存储
-  const savedParallel = localStorage.getItem('fjcpc_parallel');
-  if (savedParallel !== null) optParallel.value = savedParallel === '1';
-  const savedUseCache = localStorage.getItem('fjcpc_use_cache');
-  if (savedUseCache !== null) optUseCache.value = savedUseCache === '1';
+  const savedParallel = localStorage.getItem('fjcpc_parallel')
+  if (savedParallel !== null) optParallel.value = savedParallel === '1'
+  const savedUseCache = localStorage.getItem('fjcpc_use_cache')
+  if (savedUseCache !== null) optUseCache.value = savedUseCache === '1'
 
-  const savedTheme = localStorage.getItem('fjcpc_theme');
+  const savedTheme = localStorage.getItem('fjcpc_theme')
   if (savedTheme) {
-    themeMode.value = savedTheme;
+    themeMode.value = savedTheme
   }
 
   // 预取当前时令
   try {
-    const r = await fetch('http://127.0.0.1:4000/api/season');
+    const r = await fetch('http://127.0.0.1:4000/api/season')
     if (r.ok) {
-      const j = await r.json();
+      const j = await r.json()
       if (j.status === 'success' && j.data?.season) {
-        seasonHint.value = j.data.season;
+        seasonHint.value = j.data.season
       }
     }
   } catch (_) {
     // 静默失败，不影响主流程
   }
-});
+})
 
 // 应用主题到 <html>（class = dark）
 const applyTheme = () => {
-  const root = document.documentElement;
+  const root = document.documentElement
   const prefersDark =
     window.matchMedia &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches;
+    window.matchMedia('(prefers-color-scheme: dark)').matches
   const effective =
     themeMode.value === 'system'
       ? prefersDark
         ? 'dark'
         : 'light'
-      : themeMode.value;
-  if (effective === 'dark') root.classList.add('dark');
-  else root.classList.remove('dark');
-};
+      : themeMode.value
+  if (effective === 'dark') root.classList.add('dark')
+  else root.classList.remove('dark')
+}
 
 onMounted(() => {
-  applyTheme();
+  applyTheme()
   // 跟随系统变化
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
+  const mq = window.matchMedia('(prefers-color-scheme: dark)')
   const onChange = () => {
-    if (themeMode.value === 'system') applyTheme();
-  };
-  mq.addEventListener?.('change', onChange);
-});
+    if (themeMode.value === 'system') applyTheme()
+  }
+  mq.addEventListener?.('change', onChange)
+})
 
-watch(themeMode, applyTheme);
+watch(themeMode, applyTheme)
 
 // 切换主题
 
 // 持久化高级选项
-watch(optParallel, (v) =>
-  localStorage.setItem('fjcpc_parallel', v ? '1' : '0')
-);
+watch(optParallel, (v) => localStorage.setItem('fjcpc_parallel', v ? '1' : '0'))
 watch(optUseCache, (v) =>
   localStorage.setItem('fjcpc_use_cache', v ? '1' : '0')
-);
+)
 
 const cycleTheme = () => {
-  const modes = ['system', 'light', 'dark'];
-  const currentIndex = modes.indexOf(themeMode.value);
-  const nextIndex = (currentIndex + 1) % modes.length;
-  themeMode.value = modes[nextIndex];
-  localStorage.setItem('fjcpc_theme', themeMode.value);
-};
+  const modes = ['system', 'light', 'dark']
+  const currentIndex = modes.indexOf(themeMode.value)
+  const nextIndex = (currentIndex + 1) % modes.length
+  themeMode.value = modes[nextIndex]
+  localStorage.setItem('fjcpc_theme', themeMode.value)
+}
 
 // 主题图标和文字
-const themeIcon = computed(() => {
-  if (themeMode.value === 'system')
-    return 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z';
-  if (themeMode.value === 'light')
-    return 'M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z';
-  return 'M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z';
-});
 
 const themeText = computed(() => {
-  if (themeMode.value === 'system') return '跟随系统';
-  if (themeMode.value === 'light') return '浅色模式';
-  return '深色模式';
-});
+  if (themeMode.value === 'system') return '跟随系统'
+  if (themeMode.value === 'light') return '浅色模式'
+  return '深色模式'
+})
 
 // 显示提示消息
 const showToast = (message, type = 'success') => {
-  toast.value = { show: true, message, type };
+  toast.value = { show: true, message, type }
   setTimeout(() => {
-    toast.value.show = false;
-  }, 3000);
-};
+    toast.value.show = false
+  }, 3000)
+}
 
 // 提取 UCode
 const extractUCode = (input) => {
-  const trimmed = input.trim();
+  const trimmed = input.trim()
   // 如果是URL，提取UCode
-  const urlMatch = trimmed.match(/[?&]uid=([^&]+)/i);
+  const urlMatch = trimmed.match(/[?&]uid=([^&]+)/i)
   if (urlMatch) {
-    return urlMatch[1];
+    return urlMatch[1]
   }
   // 否则直接返回输入
-  return trimmed;
-};
+  return trimmed
+}
 
 // 获取课表
 const fetchSchedule = async () => {
-  const ucode = extractUCode(inputValue.value);
+  const ucode = extractUCode(inputValue.value)
 
   if (!ucode) {
-    showToast('请输入 UCode 或课表链接', 'error');
-    return;
+    showToast('请输入 UCode 或课表链接', 'error')
+    return
   }
 
-  loading.value = true;
-  scheduleData.value = null;
+  loading.value = true
+  scheduleData.value = null
 
   try {
     // 保存原始输入到 localStorage
-    localStorage.setItem('fjcpc_ucode', inputValue.value.trim());
+    localStorage.setItem('fjcpc_ucode', inputValue.value.trim())
 
     const response = await fetch('http://127.0.0.1:4000/api/schedule', {
       method: 'POST',
@@ -159,39 +162,39 @@ const fetchSchedule = async () => {
         parallel: optParallel.value,
         use_cache: optUseCache.value,
       }),
-    });
+    })
 
     if (!response.ok) {
-      throw new Error('获取课表失败');
+      throw new Error('获取课表失败')
     }
 
-    const result = await response.json();
+    const result = await response.json()
 
     if (result.status === 'success') {
-      scheduleData.value = result.data;
-      showToast('✓ 检测到课表数据，已还原成课表格式并打包回传。', 'success');
+      scheduleData.value = result.data
+      showToast('✓ 检测到课表数据，已还原成课表格式并打包回传。', 'success')
     } else {
-      throw new Error(result.message || '获取课表失败');
+      throw new Error(result.message || '获取课表失败')
     }
   } catch (err) {
-    showToast(err.message || '网络错误，请稍后重试', 'error');
+    showToast(err.message || '网络错误，请稍后重试', 'error')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // 清空输入
 const clearInput = () => {
-  inputValue.value = '';
-  scheduleData.value = null;
-};
+  inputValue.value = ''
+  scheduleData.value = null
+}
 
 // 处理回车键
 const handleKeyPress = (e) => {
   if (e.key === 'Enter') {
-    fetchSchedule();
+    fetchSchedule()
   }
-};
+}
 </script>
 
 <template>
@@ -214,15 +217,7 @@ const handleKeyPress = (e) => {
       >
         <!-- 左侧：Logo + 标题 -->
         <div class="flex items-center gap-2.5">
-          <svg
-            class="w-6 h-6 text-gray-900"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-          >
-            <path
-              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-            />
-          </svg>
+          <IconGithub class="w-6 h-6 text-gray-900" />
           <h1 class="text-lg font-semibold text-gray-900">
             FJCPC Course Parser
           </h1>
@@ -244,19 +239,7 @@ const handleKeyPress = (e) => {
               @click="clearInput"
               class="absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
             >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <IconClear class="w-4 h-4" />
             </button>
 
             <button
@@ -264,19 +247,7 @@ const handleKeyPress = (e) => {
               :disabled="loading || !inputValue.trim()"
               class="absolute right-7 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              <svg
-                class="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
+              <IconSearch class="w-5 h-5" />
             </button>
 
             <!-- 高级开关按钮：箭头朝上，展开时旋转朝下 -->
@@ -286,18 +257,10 @@ const handleKeyPress = (e) => {
               :aria-expanded="showAdvanced ? 'true' : 'false'"
               title="高级选项"
             >
-              <svg
+              <IconChevronUp
                 class="w-4 h-4 transition-transform duration-200"
                 :class="showAdvanced ? 'rotate-180' : 'rotate-0'"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M5.23 12.21a.75.75 0 001.06.02L10 8.707l3.71 3.524a.75.75 0 001.04-1.082l-4.25-4.04a.75.75 0 00-1.04 0l-4.25 4.04a.75.75 0 00-.02 1.06z"
-                  clip-rule="evenodd"
-                />
-              </svg>
+              />
             </button>
 
             <!-- 高级下拉菜单：带动画 -->
@@ -358,8 +321,8 @@ const handleKeyPress = (e) => {
               (scheduleData?.season || seasonHint) === 'winter'
                 ? '冬令时作息'
                 : (scheduleData?.season || seasonHint) === 'summer'
-                ? '夏令时作息'
-                : ''
+                  ? '夏令时作息'
+                  : ''
             }}
           </span>
 
@@ -370,19 +333,9 @@ const handleKeyPress = (e) => {
             :title="themeText"
             aria-label="toggle theme"
           >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                :d="themeIcon"
-              />
-            </svg>
+            <IconLaptop v-if="themeMode === 'system'" class="w-6 h-6" />
+            <IconSun v-else-if="themeMode === 'light'" class="w-6 h-6" />
+            <IconMoon v-else class="w-6 h-6" />
           </button>
 
           <!-- 帮助 -->
@@ -391,19 +344,7 @@ const handleKeyPress = (e) => {
             class="text-gray-600 hover:text-gray-900 transition-colors duration-200"
             title="使用教程"
           >
-            <svg
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <IconHelp class="w-6 h-6" />
           </button>
         </div>
       </div>
@@ -432,34 +373,8 @@ const handleKeyPress = (e) => {
           ]"
         >
           <div class="flex items-center gap-2 text-sm font-medium">
-            <svg
-              v-if="toast.type === 'success'"
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <svg
-              v-else
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <IconSuccess v-if="toast.type === 'success'" class="w-5 h-5" />
+            <IconInfo v-else class="w-5 h-5" />
             <span>{{ toast.message }}</span>
           </div>
         </div>
@@ -497,19 +412,7 @@ const handleKeyPress = (e) => {
         :enter="{ opacity: 1, y: 0, transition: { duration: 500 } }"
         class="flex flex-col items-center justify-center py-40"
       >
-        <svg
-          class="w-20 h-20 text-gray-400 mb-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.5"
-            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-          />
-        </svg>
+        <IconBooks class="w-20 h-20 text-gray-400 mb-6" />
         <p class="text-2xl text-center text-gray-900 mb-2">
           欢迎使用 FJCPC Course Parser，<br />
           请在上方输入 UCode 或含有 UCode 的课表链接开始查询。
@@ -554,11 +457,7 @@ const handleKeyPress = (e) => {
             target="_blank"
             class="hover:text-gray-900 transition-colors duration-200 flex items-center gap-1"
           >
-            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16">
-              <path
-                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-              />
-            </svg>
+            <IconGithub class="w-3.5 h-3.5" />
             GitHub Repository
           </a>
           <span class="text-gray-300">·</span>

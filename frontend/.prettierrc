@@ -1,5 +1,5 @@
 {
-  "semi": true,
+  "semi": false,
   "trailingComma": "es5",
   "singleQuote": true,
   "printWidth": 80,
@@ -10,5 +10,19 @@
   "arrowParens": "always",
   "endOfLine": "lf",
   "quoteProps": "as-needed",
-  "jsxSingleQuote": true
+  "jsxSingleQuote": true,
+  "overrides": [
+    {
+      "files": "*.svg",
+      "options": {
+        "parser": "html"
+      }
+    },
+    {
+      "files": "*.json",
+      "options": {
+        "parser": "json"
+      }
+    }
+  ]
 }

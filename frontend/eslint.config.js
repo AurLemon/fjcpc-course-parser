@@ -11,7 +11,7 @@ export default [
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.es2021
+        ...globals.es2021,
       },
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -71,6 +71,7 @@ export default [
     rules: {
       indent: 'off',
       semi: ['warn', 'never'],
+      'eol-last': ['warn', 'always'],
       quotes: 'off',
     },
   },

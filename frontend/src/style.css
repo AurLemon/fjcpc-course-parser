@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @layer base {
   :root {
@@ -33,9 +33,10 @@
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
-    font-family: "Inter", "Helvetica Neue", "Helvetica", "Roboto",
-      "BlinkMacSystemFont", "MiSans", "HarmonyOS Sans SC", "PingFang SC",
-      "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+    font-family:
+      'Inter', 'Helvetica Neue', 'Helvetica', 'Roboto', 'BlinkMacSystemFont',
+      'MiSans', 'HarmonyOS Sans SC', 'PingFang SC', 'Hiragino Sans GB',
+      'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
