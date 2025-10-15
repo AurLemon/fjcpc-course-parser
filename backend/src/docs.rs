@@ -16,6 +16,8 @@ use crate::services::stats::StatsResponse;
         controller::schedule::post_schedule,
         controller::schedule::get_user_info_endpoint,
         controller::schedule::get_schedule_meta,
+        controller::schedule::get_time_table,
+        controller::schedule::get_season,
         controller::schedule::get_stats,
         controller::schedule::ping,
     ),
@@ -29,6 +31,12 @@ use crate::services::stats::StatsResponse;
         controller::schedule::StatsApiResponse,
         controller::schedule::PingData,
         controller::schedule::PingApiResponse,
+        // New explicit schemas for season/time-table
+        controller::schedule::SeasonResponse,
+        controller::schedule::SeasonApiResponse,
+        controller::schedule::TimeTableResponse,
+        controller::schedule::TimeTableApiResponse,
+        // Core models
         SchoolYear,
         WeekInfo,
         DayCourse,

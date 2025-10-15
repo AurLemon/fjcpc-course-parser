@@ -15,6 +15,7 @@ use crate::utils::{
     schedule as schedule_utils,
 };
 
+
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ScheduleRequest {
     /// 学生 UCode
@@ -22,6 +23,12 @@ pub struct ScheduleRequest {
     /// 示例：`"ABC123DEF456GHI789JKL012MNO345PQR678"`
     #[schema(example = "ABC123DEF456GHI789JKL012MNO345PQR678")]
     pub ucode: String,
+    /// 是否并行请求所有周（默认 true）
+    #[serde(default)]
+    pub parallel: Option<bool>,
+    /// 是否使用缓存（默认 true；若命中直接返回缓存）
+    #[serde(default)]
+    pub use_cache: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
@@ -31,8 +38,10 @@ pub struct ScheduleResponse {
     /// Key: 周号（1-22）
     /// Value: 该周的每日课程列表（周一到周日）
     pub weeks: HashMap<u32, Vec<DayCourse>>,
-    /// 课程时间表（根据学期开始日期自动判断冬夏季）
+    /// 课程时间表
     pub time_table: Vec<(String, String)>,
+    /// 明确的时令字段："winter" | "summer"
+    pub season: String,
 }
 
 /// 课表 API 响应（具体类型，用于 OpenAPI 文档）
@@ -100,19 +109,19 @@ pub async fn post_schedule(
     let start_time = Instant::now();
     let ucode = payload.ucode.clone();
 
-    // 检查缓存
-    if let Some(cached_data) = cache::get_cached_schedule(&ucode) {
-        tracing::info!("Cache hit for ucode: {}", ucode);
-        // 从缓存获取时间表（使用当前日期判断）
-        let time_table = schedule_utils::get_course_time_table(
-            &chrono::Local::now().format("%Y-%m-%d").to_string()
-        ).times;
-        let data = ScheduleResponse {
-            weeks: cached_data,
-            time_table,
-        };
-        let resp = ApiResponse::success(200, data, "OK (from cache)");
-        return HttpResponse::Ok().json(resp);
+    // 是否使用缓存（默认 true）
+    let use_cache = payload.use_cache.unwrap_or(true);
+    if use_cache {
+        if let Some(cached_data) = cache::get_cached_schedule(&ucode) {
+            tracing::info!("Cache hit for ucode: {}", ucode);
+            // 东八区当前日期
+            let today = schedule_utils::east8_today_ymd();
+            let season = if schedule_utils::is_summer_schedule(&today) { "summer".to_string() } else { "winter".to_string() };
+            let time_table = if season == "summer" { schedule_utils::get_summer_course_time_table().times } else { schedule_utils::get_winter_course_time_table().times };
+            let data = ScheduleResponse { weeks: cached_data, time_table, season };
+            let resp = ApiResponse::success(200, data, "OK (from cache)");
+            return HttpResponse::Ok().json(resp);
+        }
     }
 
     let client = match create_http_client().await {
@@ -163,13 +172,15 @@ pub async fn post_schedule(
         }
     };
 
-    // 4) 并发获取所有周课程
+    // 4) 获取所有周课程（支持并行/顺序）
+    let parallel = payload.parallel.unwrap_or(true);
     let mut weeks_map: HashMap<u32, Vec<DayCourse>> = match course_service::get_all_courses(
         &user.access_token,
         &user.student_id,
         &semester_weeks,
         &client,
         &config,
+        parallel,
     ).await {
         Ok(m) => m,
         Err(e) => {
@@ -204,12 +215,15 @@ pub async fn post_schedule(
         }
     });
 
-    // 根据学期开始日期判断冬夏季作息时间
-    let time_table = schedule_utils::get_course_time_table(&current_semester.start_time).times;
+    // 确定时令与时间表（东八区当前日期）
+    let today = schedule_utils::east8_today_ymd();
+    let season = if schedule_utils::is_summer_schedule(&today) { "summer".to_string() } else { "winter".to_string() };
+    let time_table = if season == "summer" { schedule_utils::get_summer_course_time_table().times } else { schedule_utils::get_winter_course_time_table().times };
 
     let data = ScheduleResponse {
         weeks: weeks_map,
         time_table,
+        season,
     };
     let resp = ApiResponse::success(200, data, "OK");
     HttpResponse::Ok().json(resp)
@@ -376,6 +390,7 @@ pub async fn get_schedule_meta(
     let Some(current_semester) = current else {
         let meta = ScheduleMeta { years, weeks: vec![] };
         let resp = ApiResponse::success(200, meta, "OK (no current semester)");
+
         return HttpResponse::Ok().json(resp);
     };
     let semester_str = current_semester.semester.to_string();
@@ -458,6 +473,7 @@ pub async fn get_stats(db: web::Data<DatabaseConnection>) -> impl Responder {
             let resp: ApiResponse<serde_json::Value> = ApiResponse::error(
                 500,
                 serde_json::json!({}),
+
                 format!("Failed to get stats: {}", e),
             );
             HttpResponse::InternalServerError().json(resp)
@@ -465,3 +481,109 @@ pub async fn get_stats(db: web::Data<DatabaseConnection>) -> impl Responder {
     }
 }
 
+
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct TimeTableResponse {
+    /// 课程时间表
+    pub time_table: Vec<(String, String)>,
+    /// 明确的时令字段："winter" | "summer"
+    pub season: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct SeasonResponse {
+    /// 当前时令："winter" | "summer"
+    pub season: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct SeasonApiResponse {
+    /// HTTP 状态码
+    #[schema(example = 200)]
+    pub code: u16,
+    /// 响应状态
+    #[schema(example = "success")]
+    pub status: String,
+    /// 时令数据
+    pub data: SeasonResponse,
+    /// 响应消息
+    #[schema(example = "OK")]
+    pub message: String,
+}
+
+/// 获取作息时令（支持可选日期），默认按东八区当前日期
+#[utoipa::path(
+    get,
+    path = "/api/season",
+    tag = "Schedule",
+    params(
+        ("date" = String, Query, description = "计算该日期的时令，格式 YYYY-MM-DD；不传则按东八区当前日期", example = "2025-06-01")
+    ),
+    responses(
+        (status = 200, description = "成功获取当前时令", body = SeasonApiResponse),
+        (status = 400, description = "日期格式不合法，应为 YYYY-MM-DD")
+    )
+)]
+pub async fn get_season(query: web::Query<std::collections::HashMap<String, String>>) -> impl Responder {
+    let date_str = if let Some(d) = query.get("date") {
+        d.to_string()
+    } else {
+        schedule_utils::east8_today_ymd()
+    };
+
+    if chrono::NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").is_err() {
+        let resp: ApiResponse<serde_json::Value> = ApiResponse::error(400, serde_json::json!({}), "Invalid date format, expected YYYY-MM-DD");
+        return HttpResponse::BadRequest().json(resp);
+    }
+
+    let season = if schedule_utils::is_summer_schedule(&date_str) { "summer".to_string() } else { "winter".to_string() };
+    HttpResponse::Ok().json(ApiResponse::success(200, SeasonResponse { season }, "OK"))
+}
+
+
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct TimeTableApiResponse {
+    /// HTTP 状态码
+    #[schema(example = 200)]
+    pub code: u16,
+    /// 响应状态
+    #[schema(example = "success")]
+    pub status: String,
+    /// 时间表数据
+    pub data: TimeTableResponse,
+    /// 响应消息
+    #[schema(example = "OK")]
+    pub message: String,
+}
+
+/// 获取课程时间表（支持 auto | winter | summer）
+#[utoipa::path(
+    get,
+    path = "/api/time-table",
+    tag = "Schedule",
+    params(("date" = String, Query, description = "YYYY-MM-DD；不传则按东八区当天", example = "2025-06-01")),
+    responses(
+        (status = 200, description = "成功获取时间表", body = TimeTableApiResponse),
+        (status = 400, description = "请求参数错误")
+    )
+)]
+pub async fn get_time_table(
+    query: web::Query<HashMap<String, String>>,
+) -> impl Responder {
+    let date_str = if let Some(d) = query.get("date") {
+        d.to_string()
+    } else {
+        schedule_utils::east8_today_ymd()
+    };
+
+    if chrono::NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").is_err() {
+        let resp: ApiResponse<serde_json::Value> = ApiResponse::error(400, serde_json::json!({}), "Invalid date format, expected YYYY-MM-DD");
+        return HttpResponse::BadRequest().json(resp);
+    }
+
+    let season = if schedule_utils::is_summer_schedule(&date_str) { "summer".to_string() } else { "winter".to_string() };
+    let time_table = if season == "summer" { schedule_utils::get_summer_course_time_table().times } else { schedule_utils::get_winter_course_time_table().times };
+
+    HttpResponse::Ok().json(ApiResponse::success(200, TimeTableResponse { time_table, season }, "OK"))
+}

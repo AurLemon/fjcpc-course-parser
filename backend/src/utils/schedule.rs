@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use chrono::{NaiveDate, Datelike};
+use chrono::{NaiveDate, Datelike, Utc, FixedOffset};
 
 /// 日程表对象
 ///
@@ -94,3 +94,51 @@ pub fn get_course_time_table(date: &str) -> CourseTimeTable {
     }
 }
 
+
+
+/// 获取冬季作息时间表
+pub fn get_winter_course_time_table() -> CourseTimeTable {
+    CourseTimeTable {
+        times: vec![
+            ("08:00".to_string(), "08:45".to_string()), // 第1节课
+            ("08:55".to_string(), "09:40".to_string()), // 第2节课
+            ("10:00".to_string(), "10:45".to_string()), // 第3节课
+            ("10:55".to_string(), "11:40".to_string()), // 第4节课
+            ("14:00".to_string(), "14:45".to_string()), // 第5节课
+            ("14:55".to_string(), "15:40".to_string()), // 第6节课
+            ("16:00".to_string(), "16:45".to_string()), // 第7节课
+            ("16:55".to_string(), "17:40".to_string()), // 第8节课
+            ("19:00".to_string(), "19:45".to_string()), // 第9节课
+            ("19:55".to_string(), "20:40".to_string()), // 第10节课
+        ],
+    }
+}
+
+/// 获取夏季作息时间表
+pub fn get_summer_course_time_table() -> CourseTimeTable {
+    CourseTimeTable {
+        times: vec![
+            ("08:00".to_string(), "08:45".to_string()), // 第1节课
+            ("08:55".to_string(), "09:40".to_string()), // 第2节课
+            ("10:00".to_string(), "10:45".to_string()), // 第3节课
+            ("10:55".to_string(), "11:40".to_string()), // 第4节课
+            ("14:30".to_string(), "15:15".to_string()), // 第5节课
+            ("15:25".to_string(), "16:10".to_string()), // 第6节课
+            ("16:30".to_string(), "17:15".to_string()), // 第7节课
+            ("17:25".to_string(), "18:10".to_string()), // 第8节课
+            ("19:20".to_string(), "20:05".to_string()), // 第9节课
+            ("20:15".to_string(), "21:00".to_string()), // 第10节课
+        ],
+    }
+}
+
+// --- Global East-8 timezone helpers (utils) ---
+/// 固定东八区（Asia/Shanghai）
+pub fn tz_east8() -> FixedOffset {
+    FixedOffset::east_opt(8 * 3600).expect("valid east8 offset")
+}
+
+/// 东八区当前日期（YYYY-MM-DD）
+pub fn east8_today_ymd() -> String {
+    Utc::now().with_timezone(&tz_east8()).format("%Y-%m-%d").to_string()
+}

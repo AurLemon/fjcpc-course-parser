@@ -28,21 +28,12 @@ const currentWeekData = computed(() => {
 });
 
 // 星期映射
-const weekdayNames = [
-  "",
-  "周一",
-  "周二",
-  "周三",
-  "周四",
-  "周五",
-  "周六",
-  "周日",
-];
+const weekdayNames = ["", "周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
-// 课程节次时间映射（使用后端返回的时间表）
+// 课程节次时间映射
 const courseTimeMap = computed(() => {
   if (!props.scheduleData?.time_table) {
-    // 默认冬季时间表
+    // 默认时间表
     return {
       1: "08:00-08:45",
       2: "08:55-09:40",
@@ -160,14 +151,12 @@ const courseGrid = computed(() => {
       y: 0,
       transition: { duration: 600, delay: 200, ease: 'easeOut' },
     }"
-    class="bg-white rounded-2xl shadow-sm border-[0.5px] border-gray-200 overflow-hidden"
+    class="bg-white dark:bg-gray-900 rounded-2xl border-[0.5px] border-gray-200 dark:border-gray-800 overflow-hidden h-full flex flex-col"
   >
     <!-- 周选择器 -->
-    <div class="border-b-[0.5px] border-gray-200 p-4">
+    <div class="border-b-[0.5px] border-gray-200 dark:border-gray-800 p-4 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-900">
       <div class="flex items-center gap-2 overflow-x-auto pb-2">
-        <span class="text-sm text-gray-600 whitespace-nowrap mr-2"
-          >选择周次:</span
-        >
+        <span class="text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap mr-2 font-medium">选择周次:</span>
         <div class="flex gap-2">
           <button
             v-for="week in weeks"
@@ -175,11 +164,11 @@ const courseGrid = computed(() => {
             @click="changeWeek(week)"
             :class="
               cn(
-                'px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-                'hover:scale-105 active:scale-95 whitespace-nowrap',
+                'px-4 py-2 rounded-xl text-sm font-medium transition-colors duration-200',
+                'whitespace-nowrap',
                 currentWeek === week
-                  ? 'bg-gray-900 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                  ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900'
+                  : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700'
               )
             "
           >
@@ -190,17 +179,17 @@ const courseGrid = computed(() => {
     </div>
 
     <!-- 课表网格 -->
-    <div class="p-4 overflow-x-auto">
-      <div class="min-w-[800px]">
+    <div class="p-4 flex-1 min-h-0">
+      <div class="w-full sm:w-full sm:min-w-[740px]">
         <!-- 表头 -->
-        <div class="grid grid-cols-8 gap-2 mb-3">
-          <div class="text-center text-sm font-medium text-gray-600 py-2">
+        <div class="grid grid-cols-8 gap-2 sm:gap-3 mb-3 timetableHeader">
+          <div class="text-center text-sm font-semibold text-gray-600 dark:text-gray-300 py-3 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl">
             节次
           </div>
           <div
             v-for="day in 7"
             :key="day"
-            class="text-center text-sm font-medium text-gray-900 py-2"
+            class="text-center text-sm font-semibold text-gray-900 dark:text-gray-100 py-3 bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl"
           >
             {{ weekdayNames[day] }}
           </div>
@@ -208,23 +197,23 @@ const courseGrid = computed(() => {
 
         <!-- 课程表格 -->
         <div
-          class="grid grid-cols-8 gap-2"
-          style="grid-auto-rows: minmax(60px, auto)"
+          class="grid grid-cols-8 gap-2 sm:gap-3 h-full timetableGrid"
+          style="height: 100%; grid-auto-rows: 1fr;"
         >
           <!-- 渲染所有格子 -->
           <template v-for="courseNum in 10" :key="courseNum">
             <!-- 节次列 -->
             <div
-              class="flex flex-col items-center justify-center bg-gray-100 rounded-lg p-2"
+              class="flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl p-3"
               :style="{
                 gridColumn: 1,
                 gridRow: courseNum,
               }"
             >
-              <div class="text-xs font-medium text-gray-900">
+              <div class="text-sm font-bold text-gray-900">
                 {{ courseNum }}
               </div>
-              <div class="text-[10px] text-gray-600 mt-0.5">
+              <div class="text-[10px] text-gray-600 mt-1 text-center leading-tight">
                 {{ courseTimeMap[courseNum] }}
               </div>
             </div>
@@ -242,17 +231,18 @@ const courseGrid = computed(() => {
                 :enter="{
                   opacity: 1,
                   scale: 1,
-                  transition: { duration: 300, delay: 50 },
+                  transition: { duration: 400, delay: courseNum * 30 + day * 20 },
                 }"
                 :class="
                   cn(
-                    'p-3 rounded-lg text-white text-xs',
-                    'hover:scale-[1.01] transition-all duration-200',
-                    'cursor-pointer flex flex-col justify-center'
+                    'p-3 rounded-xl text-white text-xs',
+                    'transition-colors duration-200',
+                    'cursor-pointer flex flex-col justify-center',
+                    'backdrop-blur-sm'
                   )
                 "
                 :style="{
-                  backgroundColor: courseGrid[day][courseNum].color,
+                  background: `linear-gradient(135deg, ${courseGrid[day][courseNum].color} 0%, ${courseGrid[day][courseNum].color}dd 100%)`,
                   gridColumn: day + 1,
                   gridRow:
                     courseGrid[day][courseNum].rowSpan === 2
@@ -266,18 +256,18 @@ const courseGrid = computed(() => {
                   })
                 "
               >
-                <div class="font-medium mb-1.5 line-clamp-2">
+                <div class="font-semibold mb-2 line-clamp-2 leading-tight">
                   {{ courseGrid[day][courseNum].name }}
                 </div>
-                <div class="text-[10px] opacity-90 space-y-0.5">
+                <div class="text-[10px] opacity-95 space-y-1">
                   <div
                     v-if="courseGrid[day][courseNum].classroom"
-                    class="flex items-center gap-1"
+                    class="flex items-center gap-1.5"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="10"
-                      height="10"
+                      width="11"
+                      height="11"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -297,12 +287,12 @@ const courseGrid = computed(() => {
                   </div>
                   <div
                     v-if="courseGrid[day][courseNum].teacher?.length"
-                    class="flex items-center gap-1"
+                    class="flex items-center gap-1.5"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="10"
-                      height="10"
+                      width="11"
+                      height="11"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -326,7 +316,7 @@ const courseGrid = computed(() => {
                   !courseGrid[day][courseNum] ||
                   courseGrid[day][courseNum] === null
                 "
-                class="rounded-lg border-[0.5px] border-gray-200 bg-gray-50/30"
+                class="rounded-xl border-[0.5px] border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-50/50 to-white dark:from-gray-800/50 dark:to-gray-900 hover:bg-gray-50/80 dark:hover:bg-gray-800/80 transition-colors duration-200"
                 :style="{
                   gridColumn: day + 1,
                   gridRow: courseNum,
@@ -342,24 +332,30 @@ const courseGrid = computed(() => {
     <!-- 空状态 -->
     <div
       v-if="!currentWeekData || currentWeekData.length === 0"
-      class="p-12 text-center text-gray-600"
+      v-motion
+      :initial="{ opacity: 0, y: 20 }"
+      :enter="{ opacity: 1, y: 0, transition: { duration: 500 } }"
+      class="p-16 text-center"
     >
-      <div class="text-4xl mb-2">📅</div>
-      <div class="text-sm">本周暂无课程</div>
+      <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+      </svg>
+      <div class="text-lg font-medium text-gray-900 mb-2">本周暂无课程</div>
+      <div class="text-sm text-gray-500">享受你的空闲时光吧！</div>
     </div>
   </div>
 
   <!-- 课程详情对话框 -->
   <Teleport to="body">
     <Transition
-      enter-active-class="transition-opacity duration-200"
+      enter-active-class="transition-opacity duration-300"
       leave-active-class="transition-opacity duration-200"
       enter-from-class="opacity-0"
       leave-to-class="opacity-0"
     >
       <div
         v-if="showDialog"
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         @click="closeDialog"
       >
         <Transition
@@ -370,41 +366,34 @@ const courseGrid = computed(() => {
         >
           <div
             v-if="showDialog && selectedCourse"
-            class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
+            class="bg-white rounded-2xl border-[0.5px] border-gray-200 max-w-md w-full overflow-hidden"
             @click.stop
           >
             <!-- 头部 -->
             <div
-              class="p-6 text-white"
-              :style="{ backgroundColor: selectedCourse.color }"
+              class="p-6 text-white relative overflow-hidden"
+              :style="{
+                background: `linear-gradient(135deg, ${selectedCourse.color} 0%, ${selectedCourse.color}dd 100%)`
+              }"
             >
-              <div class="flex items-start justify-between">
+              <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+              <div class="relative flex items-start justify-between">
                 <div class="flex-1">
-                  <h3 class="text-xl font-bold mb-2">
+                  <h3 class="text-xl font-bold mb-2 leading-tight">
                     {{ selectedCourse.name }}
                   </h3>
-                  <div class="text-sm opacity-90">
-                    {{ weekdayNames[selectedCourse.weekday] }} 第{{
-                      selectedCourse.course_number
-                    }}节
+                  <div class="text-sm opacity-95 flex items-center gap-2">
+                    <span>{{ weekdayNames[selectedCourse.weekday] }}</span>
+                    <span>·</span>
+                    <span>第{{ selectedCourse.course_number }}节</span>
                   </div>
                 </div>
                 <button
                   @click="closeDialog"
-                  class="ml-4 p-2 hover:bg-white/20 rounded-lg transition-colors"
+                  class="ml-4 p-2 hover:bg-white/20 rounded-xl transition-colors duration-200"
                 >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
-                    />
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                   </svg>
                 </button>
               </div>
@@ -414,26 +403,14 @@ const courseGrid = computed(() => {
             <div class="p-6 space-y-4">
               <!-- 课程代码 -->
               <div class="flex items-start gap-3">
-                <div
-                  class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-4 h-4 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"
-                    />
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <div class="text-xs text-gray-600 mb-1">课程代码</div>
-                  <div class="text-sm font-medium text-gray-900 font-mono">
+                  <div class="text-xs text-gray-500 mb-1 font-medium">课程代码</div>
+                  <div class="text-sm font-semibold text-gray-900 font-mono">
                     {{ selectedCourse.code }}
                   </div>
                 </div>
@@ -441,92 +418,45 @@ const courseGrid = computed(() => {
 
               <!-- 班级 -->
               <div v-if="selectedCourse.class" class="flex items-start gap-3">
-                <div
-                  class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-4 h-4 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <div class="text-xs text-gray-600 mb-1">班级</div>
-                  <div class="text-sm font-medium text-gray-900">
+                  <div class="text-xs text-gray-500 mb-1 font-medium">班级</div>
+                  <div class="text-sm font-semibold text-gray-900">
                     {{ selectedCourse.class }}
                   </div>
                 </div>
               </div>
 
               <!-- 教室 -->
-              <div
-                v-if="selectedCourse.classroom"
-                class="flex items-start gap-3"
-              >
-                <div
-                  class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-4 h-4 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
+              <div v-if="selectedCourse.classroom" class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <div class="text-xs text-gray-600 mb-1">教室</div>
-                  <div class="text-sm font-medium text-gray-900">
+                  <div class="text-xs text-gray-500 mb-1 font-medium">教室</div>
+                  <div class="text-sm font-semibold text-gray-900">
                     {{ selectedCourse.classroom }}
                   </div>
                 </div>
               </div>
 
               <!-- 教师 -->
-              <div
-                v-if="selectedCourse.teacher?.length"
-                class="flex items-start gap-3"
-              >
-                <div
-                  class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-4 h-4 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
+              <div v-if="selectedCourse.teacher?.length" class="flex items-start gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <div class="text-xs text-gray-600 mb-1">教师</div>
-                  <div class="text-sm font-medium text-gray-900">
+                  <div class="text-xs text-gray-500 mb-1 font-medium">教师</div>
+                  <div class="text-sm font-semibold text-gray-900">
                     {{ selectedCourse.teacher.join(", ") }}
                   </div>
                 </div>
@@ -534,31 +464,16 @@ const courseGrid = computed(() => {
 
               <!-- 时间 -->
               <div class="flex items-start gap-3">
-                <div
-                  class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-4 h-4 text-gray-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
                 </div>
                 <div class="flex-1">
-                  <div class="text-xs text-gray-600 mb-1">上课时间</div>
-                  <div class="text-sm font-medium text-gray-900">
+                  <div class="text-xs text-gray-500 mb-1 font-medium">上课时间</div>
+                  <div class="text-sm font-semibold text-gray-900">
                     {{ courseTimeMap[selectedCourse.course_number] }}
-                    <span
-                      v-if="selectedCourse.rowSpan > 1"
-                      class="text-xs text-gray-600 ml-2"
-                    >
+                    <span v-if="selectedCourse.rowSpan > 1" class="text-xs text-gray-500 ml-2">
                       ({{ selectedCourse.rowSpan }}节连上)
                     </span>
                   </div>
@@ -567,10 +482,10 @@ const courseGrid = computed(() => {
             </div>
 
             <!-- 底部 -->
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div class="px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-t-[0.5px] border-gray-200">
               <button
                 @click="closeDialog"
-                class="w-full py-2.5 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors"
+                class="w-full py-3 px-4 bg-gradient-to-r from-gray-900 to-gray-700 text-white rounded-xl font-medium transition-colors duration-200"
               >
                 关闭
               </button>
@@ -583,23 +498,35 @@ const courseGrid = computed(() => {
 </template>
 
 <style scoped>
-/* 自定义滚动条 */
+/* 自定义滚动条（单色） */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
-  border-radius: 3px;
+  background: #d1d5db; /* gray-300 */
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.3);
+  background: #d1d5db; /* 保持单色，无过渡 */
+}
+
+
+/* PC 默认列宽（保持现状） */
+.timetableHeader { grid-template-columns: minmax(56px,1fr) repeat(7, minmax(44px,1fr)); }
+.timetableGrid  { grid-template-columns: minmax(56px,1fr) repeat(7, minmax(44px,1fr)); }
+
+/* Mobile 优化：增大每列宽度，并启用横向滚动容器（已在上层加 overflow-x-auto） */
+@media (max-width: 640px) {
+  .timetableHeader { grid-template-columns: 48px repeat(7, 1fr); }
+  .timetableGrid  { grid-template-columns: 48px repeat(7, 1fr); }
 }
 
 .line-clamp-1 {
