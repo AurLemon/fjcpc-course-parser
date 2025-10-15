@@ -48,6 +48,7 @@ onMounted(async () => {
   const savedTheme = localStorage.getItem('fjcpc_theme')
   if (savedTheme) {
     themeMode.value = savedTheme
+    applyTheme()
   }
 
   // 预取当前时令
@@ -217,8 +218,8 @@ const handleKeyPress = (e) => {
       >
         <!-- 左侧：Logo + 标题 -->
         <div class="flex items-center gap-2.5">
-          <IconGithub class="w-6 h-6 text-gray-900" />
-          <h1 class="text-lg font-semibold text-gray-900">
+          <IconGithub class="w-6 h-6 text-gray-900 dark:text-gray-100" />
+          <h1 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
             FJCPC Course Parser
           </h1>
         </div>
@@ -237,7 +238,7 @@ const handleKeyPress = (e) => {
             <button
               v-if="inputValue"
               @click="clearInput"
-              class="absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              class="absolute right-14 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100 transition-colors duration-200"
             >
               <IconClear class="w-4 h-4" />
             </button>
@@ -245,7 +246,7 @@ const handleKeyPress = (e) => {
             <button
               @click="fetchSchedule"
               :disabled="loading || !inputValue.trim()"
-              class="absolute right-7 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200"
+              class="absolute right-7 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <IconSearch class="w-5 h-5" />
             </button>
@@ -341,7 +342,7 @@ const handleKeyPress = (e) => {
           <!-- 帮助 -->
           <button
             @click="showTutorial = true"
-            class="text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            class="flex items-center text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
             title="使用教程"
           >
             <IconHelp class="w-6 h-6" />
@@ -412,14 +413,14 @@ const handleKeyPress = (e) => {
         :enter="{ opacity: 1, y: 0, transition: { duration: 500 } }"
         class="flex flex-col items-center justify-center py-40"
       >
-        <IconBooks class="w-20 h-20 text-gray-400 mb-6" />
-        <p class="text-2xl text-center text-gray-900 mb-2">
+        <IconBooks class="w-20 h-20 text-gray-400 dark:text-gray-100 mb-6" />
+        <p class="text-2xl text-center text-gray-900 dark:text-gray-100 mb-2">
           欢迎使用 FJCPC Course Parser，<br />
           请在上方输入 UCode 或含有 UCode 的课表链接开始查询。
         </p>
         <button
           @click="showTutorial = true"
-          class="mt-2 cursor-pointer text-gray-400 text-sm hover:bg-gray-200/50 px-3 py-2 rounded-md transition-all duration-200"
+          class="mt-2 cursor-pointer text-gray-400 text-sm hover:bg-gray-200/50 px-3 py-2 rounded-md transition-all duration-200 dark:text-gray-100 dark:hover:bg-gray-700"
         >
           <span>如何获取我的 UCode</span>
         </button>
@@ -431,39 +432,45 @@ const handleKeyPress = (e) => {
       v-motion
       :initial="{ opacity: 0 }"
       :enter="{ opacity: 1, transition: { duration: 600, delay: 400 } }"
-      class="border-t-[0.5px] border-gray-200 mt-20 bg-gray-50"
+      class="border-t-[0.5px] border-gray-200 dark:border-gray-800 mt-20 bg-gray-50 dark:bg-gray-800"
     >
       <div class="max-w-7xl mx-auto px-4 py-8 text-center">
         <div
-          class="flex items-center justify-center gap-4 flex-wrap text-xs text-gray-600 mb-4"
+          class="flex items-center justify-center gap-4 flex-wrap text-xs text-gray-600 dark:text-gray-400 mb-4"
         >
-          <a href="#" class="hover:text-gray-900 transition-colors duration-200"
+          <a
+            href="#"
+            class="hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
             >隐私政策</a
           >
-          <span class="text-gray-300">·</span>
-          <a href="#" class="hover:text-gray-900 transition-colors duration-200"
+          <span class="text-gray-300 dark:text-gray-600">·</span>
+          <a
+            href="#"
+            class="hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
             >FAQ</a
           >
-          <span class="text-gray-300">·</span>
+          <span class="text-gray-300 dark:text-gray-600">·</span>
           <button
             @click="showTutorial = true"
-            class="hover:text-gray-900 transition-colors duration-200"
+            class="hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
           >
             使用教程
           </button>
-          <span class="text-gray-300">·</span>
+          <span class="text-gray-300 dark:text-gray-600">·</span>
           <a
             href="https://github.com"
             target="_blank"
-            class="hover:text-gray-900 transition-colors duration-200 flex items-center gap-1"
+            class="hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200 flex items-center gap-1"
           >
             <IconGithub class="w-3.5 h-3.5" />
             GitHub Repository
           </a>
-          <span class="text-gray-300">·</span>
-          <span class="text-gray-500">MIT License</span>
+          <span class="text-gray-300 dark:text-gray-600">·</span>
+          <span class="text-gray-500 dark:text-gray-500">MIT License</span>
         </div>
-        <p class="text-xs text-gray-500 leading-relaxed max-w-2xl mx-auto">
+        <p
+          class="text-xs text-gray-500 dark:text-gray-500 leading-relaxed max-w-2xl mx-auto"
+        >
           项目基于 Rust Actix + Vue 实现，仅供编程学习交流，请在 24
           小时后删除有关内容
         </p>
